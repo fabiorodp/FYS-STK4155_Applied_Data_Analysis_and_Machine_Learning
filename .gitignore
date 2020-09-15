@@ -16,3 +16,4 @@ __pycache__
 .pytest_cache
 Pipfile.lock
 Pipfile
+.idea/
