@@ -1,0 +1,18 @@
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+#others
+.DS_Store
+__pycache__
+.pytest_cache
+Pipfile.lock
+Pipfile
