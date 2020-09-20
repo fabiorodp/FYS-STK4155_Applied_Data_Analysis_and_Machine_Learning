@@ -6,21 +6,36 @@
 
 class MakePipeline:
 
-    def __init__(self, create_data_model, pre_processing_model, ml_model):
+    def __init__(self, pre_processing_model, ml_model, create_data_model=None):
         self.data_model = create_data_model
         self.pre_processing_model = pre_processing_model
         self.ml_model = ml_model
 
-    def fit_predict(self):
-        self.data_model.fit()
+    def fit(self, X=None, z=None):
+        if self.data_model is not None:
+            self.data_model.fit()
 
-        self.pre_processing_model.fit(
-            self.data_model.X,
-            self.data_model.z)
+            self.pre_processing_model.fit(
+                self.data_model.X,
+                self.data_model.z)
 
-        self.ml_model.fit(
-            self.pre_processing_model.X_train,
-            self.pre_processing_model.z_train)
+            self.ml_model.fit(
+                self.pre_processing_model.X_train,
+                self.pre_processing_model.z_train)
+
+        else:
+            self.pre_processing_model.fit(X, z)
+
+            self.ml_model.fit(
+                self.pre_processing_model.X_train,
+                self.pre_processing_model.z_train)
+
+    def predict(self, X):
+        z_predict = self.ml_model.predict(X)
+        return z_predict
+
+    def fit_predict(self, X=None, z=None):
+        self.fit(X, z)
 
         z_predict_train = \
             self.ml_model.predict(self.pre_processing_model.X_train)
@@ -41,26 +56,22 @@ class MakePipeline:
         return z_train, z_test
 
     def get_coeffs(self):
-        betas = self.ml_model.coef_OLS
+        betas = self.ml_model.coef_
         return betas
 
     def get_CI_coeffs_(self, percentile=0.95):
-        CI = self.ml_model.beta_CI_OLS(percentile)
+        CI = self.ml_model.coef_confidence_interval(percentile)
         return CI
 
-    def get_data_model_parameters(self):
+    def get_CreateData_parameters(self):
         return self.data_model.model, self.data_model.nr_samples, \
                self.data_model.degree, self.data_model.seed
 
-    def set_data_model_new_parameters(
-            self, model_name, nr_samples, degree, seed):
+    def set_CreateData_parameters(self, model_name, nr_samples, degree, seed):
         self.data_model.set_new_parameters(
             model_name, nr_samples, degree, seed)
 
-    def set_pre_processing_new_parameters(
+    def set_Preprocessing_parameters(
             self, test_size, seed, split=True, scale=True):
         self.pre_processing_model.set_new_parameters(
             test_size, seed, split, scale)
-
-    def set_ml_model_new_parameters(self, technique_name="OLS"):
-        self.ml_model.set_new_parameters(technique_name)

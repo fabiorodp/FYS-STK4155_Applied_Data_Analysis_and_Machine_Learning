@@ -51,15 +51,20 @@ class CreateData:
         else:
             return NotImplemented
 
+    def get(self):
+        if self.X is None:
+            raise ValueError("Not fitted yet")
+
+        else:
+            return self.X, self.z
+
     def _design_matrix(self, x, y):
         """
         Creates a design matrix (X) from polynomial equations of a
         specific degree.
-
         :param x: explanatory variable x of shape (n, n).
         :param y: explanatory variable y of shape (n, n).
         :param degree: The degree of the polynomial equations.
-
         :return: X : array : The design matrix (X) of shape (n*n, p),
         where p are the number of the columns or quantity of factor or
         complexity of the data.

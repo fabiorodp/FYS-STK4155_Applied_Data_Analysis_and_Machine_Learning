@@ -6,55 +6,19 @@
 
 import numpy as np
 from scipy import stats
+from sklearn.linear_model import Lasso
 
 
-class LinearRegressionTechniques:
-    """Class with many different linear regression techniques
-    for machine learning studies."""
-
-    def __init__(self, technique_name="OLS"):
-        self.technique = technique_name
-        self.coef_OLS, self.coef_var_OLS = None, None
+class OlsModel:
+    def __init__(self):
+        self.coef_ = None
+        self.coef_var = None
         self.z_var = None
 
-    def fit(self, X, z, ld=0):
-        if self.technique == "OLS":
-            self.OLS(X, z)
-
-        elif self.technique == "ridge":
-            self.ridge(X, z, ld)
-
-        elif self.technique == "lasso":
-            self.lasso(X, z, ld)
-
-    def OLS(self, X, z):
-        """ Calculates the optimal coefficients and its
-        variance."""
-        # linear inversion technique first
-        try:
-            self.coef_OLS = np.linalg.inv(X.T @ X) @ X.T @ z
-            self.coef_var_OLS = np.linalg.inv(X.T @ X)
-            self.z_var = np.var(z)
-
-        # if it does not work, use SVD technique
-        except:
-            self.coef_OLS = np.linalg.pinv(X.T @ X) @ X.T @ z
-            self.coef_var_OLS = np.linalg.pinv(X.T @ X)
-            self.z_var = np.var(z)
-
-    def beta_CI_OLS(self, percentile=0.95):
-        """ Calculates the confidence interval of the coefficients
-        beta of OLS.
-
-        :param percentile: float: Significance level
-
-        :return: array: Beta Confidence intervals.
-        """
-        cov = self.z_var * self.coef_var_OLS
-        std_err_beta_hat = np.sqrt(np.diag(cov))
-        z_score = stats.norm(0, 1).ppf(percentile)
-        self.coef_CI_OLS = z_score * std_err_beta_hat
-        return self.coef_CI_OLS
+    def fit(self, X, z):
+        self.coef_ = np.linalg.pinv(X.T @ X) @ X.T @ z
+        self.coef_var = np.linalg.pinv(X.T @ X)
+        self.z_var = np.var(z)
 
     def predict(self, X):
         """Predicts the response variable from the design
@@ -64,21 +28,43 @@ class LinearRegressionTechniques:
 
         :return: np.array: Predictions z given X.
         """
-        if self.technique == "OLS":
-            z_predict = X @ self.coef_OLS
-            return z_predict
+        z_predict = X @ self.coef_
+        return z_predict
 
-        elif self.technique == "ridge":
-            pass
+    def coef_confidence_interval(self, percentile=0.95):
+        """ Calculates the confidence interval of the coefficients.
 
-        elif self.technique == "lasso":
-            pass
+        :param percentile: float: Significance level
 
-    def ridge(self, X, z, ld):
-        pass
+        :return: array: Beta Confidence intervals.
+        """
+        cov = self.z_var * self.coef_var
+        std_err_coef = np.sqrt(np.diag(cov))
+        z_score = stats.norm(0, 1).ppf(percentile)
 
-    def lasso(self, X, z, ld):
-        pass
+        coef_confidence_interval = z_score * std_err_coef
+        return coef_confidence_interval
 
-    def set_new_parameters(self, technique_name="OLS"):
-        self.technique = technique_name
+
+class RidgeModel(OlsModel):
+    def __init__(self, lambda_):
+        super().__init__()
+        self.lambda_ = lambda_
+
+    def fit(self, X, z):
+        p = np.shape(X)[1]
+        I = np.identity(p)*self.lambda_
+        self.coef_ = np.linalg.pinv( (X.T @ X) + I) @ X.T @ z
+
+    def set_lambda(self, new_lambda):
+        self.lambda_ = new_lambda
+
+
+class LassoModel(RidgeModel):
+    def __init__(self, lambda_):
+        super().__init__(lambda_)
+
+    def fit(self, X, z):
+        l = Lasso(alpha=self.lambda_, fit_intercept=False,
+                  normalize=False).fit(X, z)
+        self.coef_ = l.coef_
