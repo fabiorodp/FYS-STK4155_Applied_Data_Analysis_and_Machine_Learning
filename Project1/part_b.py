@@ -7,8 +7,9 @@
 from package.Create_data import CreateData
 from package.Pre_processing import PreProcessing
 from package.LinearRegression import OlsModel
+from package.Bootstrap import Bootstrap
 from package.Pipeline import MakePipeline
-from package.Metrics import ComplexityStudy, Bootstrap
+from package.Metrics import ComplexityStudy
 
 
 # initializing a pipeline
@@ -50,5 +51,5 @@ cs.fit(nr_samples=[10, 50, 100, 200],
 cs.plot_study(function_of="nr_samples")
 
 # 2nd part of the exercise
-bp = Bootstrap(CreateData, PreProcessing, OlsModel, seed=10)
+bp = Bootstrap(CreateData, OlsModel, seed=10)
 bp.plot(n_boostraps=100, maxdegree=20, verbose=True)
