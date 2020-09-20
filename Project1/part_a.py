@@ -6,21 +6,22 @@
 
 from package.Create_data import CreateData
 from package.Pre_processing import PreProcessing
-from package.LinearRegression import LinearRegressionTechniques
+from package.LinearRegression import OlsModel
 from package.Pipeline import MakePipeline
 from sklearn.metrics import r2_score, mean_squared_error
+
 
 # initializing a pipeline
 pipe = MakePipeline(
     create_data_model=CreateData(),
     pre_processing_model=PreProcessing(),
-    ml_model=LinearRegressionTechniques(technique_name="OLS")
+    ml_model=OlsModel()
 )
 
 for degree in [2, 3, 4, 5]:
 
     # setting parameters to create the data
-    pipe.set_data_model_new_parameters(
+    pipe.set_CreateData_parameters(
         model_name="FrankeFunction",
         nr_samples=100,
         degree=degree,
@@ -28,7 +29,7 @@ for degree in [2, 3, 4, 5]:
     )
 
     # setting pre-processing parameters
-    pipe.set_pre_processing_new_parameters(
+    pipe.set_Preprocessing_parameters(
         test_size=0.25,
         seed=10,
         split=True,
