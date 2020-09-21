@@ -4,52 +4,44 @@
 # E-mail: fabior@uio.no
 
 
+import numpy as np
 from package.Create_data import CreateData
-from package.Pre_processing import PreProcessing
 from package.LinearRegression import OlsModel
 from package.Bootstrap import Bootstrap
-from package.Pipeline import MakePipeline
-from package.Metrics import ComplexityStudy
+from package.AccuracyStudies import AccuracyStudies
 
 
-# initializing a pipeline
-pipe = MakePipeline(
-    create_data_model=CreateData(model_name="FrankeFunction",
-                                 seed=10),
-    pre_processing_model=PreProcessing(),
-    ml_model=OlsModel()
-)
+# # # # # # # # # # Plotting Complexity[polydegree] x MSE
 
-# setting pre-processing parameters
-pipe.set_Preprocessing_parameters(
-    test_size=0.25,
-    seed=10,
-    split=True,
-    scale=True
-)
+# AccuracyStudies as function of nr_samples with MSE metric
+acc1 = AccuracyStudies(CreateData(degree=5),
+                       OlsModel(), function_of="nr_samples",
+                       metric="MSE")
+acc1.fit(complexities=np.arange(60, 300, 30), verbose=False)
+acc1.plot()
+acc1.print_best_metric()
 
-# initializing a ComplexityStudy
-cs = ComplexityStudy(pipe)
+# AccuracyStudies as function of poly_degrees with MSE metric
+acc2 = AccuracyStudies(CreateData(nr_samples=120),
+                       OlsModel(), function_of="poly_degrees",
+                       metric="MSE")
+acc2.fit(complexities=np.arange(2, 15), verbose=False)
+acc2.plot()
+acc2.print_best_metric()
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-# fitting everything
-cs.fit(nr_samples=[100],
-       poly_degrees=[2, 3, 4, 5])
+# # # # # # # # # # Plotting Bootstrap study
 
-# plotting ComplexityStudy with the predicting errors
-# as a function of the complexities (polynomial degrees),
-# for a sample space of 100 observations.
-cs.plot_study(function_of="poly_degrees")
+# bootstrapping as function of the number of samples
+bp = Bootstrap(CreateData(degree=5), OlsModel(),
+               n_boostraps=100, seed=10,
+               function_of="nr_samples")
+bp.fit(complexities=np.arange(60, 300, 30), verbose=False)
+bp.plot()
 
-# fitting again, but now with degree 5,
-# and different numbers for the sample space
-cs.fit(nr_samples=[10, 50, 100, 200],
-       poly_degrees=[5])
-
-# plotting ComplexityStudy with the predicting errors
-# as a function of the complexities (size for the sample space),
-# for a polynomial of degree 5.
-cs.plot_study(function_of="nr_samples")
-
-# 2nd part of the exercise
-bp = Bootstrap(CreateData, OlsModel, seed=10)
-bp.plot(n_boostraps=100, maxdegree=20, verbose=True)
+# bootstrapping as function of the polynomial degree
+bp = Bootstrap(CreateData(nr_samples=120), OlsModel(),
+               n_boostraps=100, seed=10,
+               function_of="poly_degrees")
+bp.fit(complexities=np.arange(2, 15), verbose=False)
+bp.plot()

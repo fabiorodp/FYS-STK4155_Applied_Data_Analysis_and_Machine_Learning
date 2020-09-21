@@ -5,58 +5,60 @@
 
 
 from package.Create_data import CreateData
-from package.Pre_processing import PreProcessing
 from package.LinearRegression import OlsModel
-from package.Pipeline import MakePipeline
 from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-
-# initializing a pipeline
-pipe = MakePipeline(
-    create_data_model=CreateData(),
-    pre_processing_model=PreProcessing(),
-    ml_model=OlsModel()
-)
 
 for degree in [2, 3, 4, 5]:
 
-    # setting parameters to create the data
-    pipe.set_CreateData_parameters(
+    # generating polynomial with the data
+    cd = CreateData(
         model_name="FrankeFunction",
         nr_samples=100,
         degree=degree,
         seed=10
     )
+    cd.fit()
+    X, z = cd.get()
 
-    # setting pre-processing parameters
-    pipe.set_Preprocessing_parameters(
-        test_size=0.25,
-        seed=10,
-        split=True,
-        scale=True
-    )
+    # splitting data
+    X_train, X_test, z_train, z_test = \
+        train_test_split(X, z, test_size=0.2, random_state=10)
 
-    # fitting and predicting values for [2, 3, 4, 5] degrees
-    z_predict_train, z_predict_test = pipe.fit_predict()
+    # scaling data
+    scaler = StandardScaler(with_mean=False, with_std=True)
+    scaler.fit(X_train)
+    X_test = scaler.transform(X_test)
+    X_train = scaler.transform(X_train)
 
-    # print coefficients beta
+    # calling OlsModel
+    model = OlsModel(seed=10)
+
+    # fitting LR model
+    model.fit(X_train, z_train)
+
+    # predicting
+    z_predict_train = model.predict(X_train)
+    z_predict_test = model.predict(X_test)
+
+    # printing coefficients (betas)
     print("Betas for polynomial of {} degree: ".format(degree),
-          pipe.get_coeffs(), "\n")
+          model.coef_, "\n")
 
     # print confidence interval for betas
-    print("CI for the betas: ", pipe.get_CI_coeffs_(), "\n")
-
-    # getting necessary parameters
-    z_train, z_test = pipe.get_z_values()
+    print("CI for betas: ",
+          model.coef_confidence_interval(percentile=0.95), "\n")
 
     # evaluating training MSE and R2-score
-    print("Training MSE : ",
+    print("Training MSE: ",
           mean_squared_error(z_train, z_predict_train))
-    print("Training R2-score : ",
+    print("Training R2-score: ",
           r2_score(z_train, z_predict_train), "\n")
 
     # evaluating test MSE and R2-score
-    print("Test MSE : ",
-          mean_squared_error(z_train, z_predict_train))
-    print("Test R2-score : ",
-          r2_score(z_train, z_predict_train), "\n")
+    print("Test MSE: ",
+          mean_squared_error(z_test, z_predict_test))
+    print("Test R2-score: ",
+          r2_score(z_test, z_predict_test), "\n")
