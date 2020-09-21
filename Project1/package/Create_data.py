@@ -96,3 +96,9 @@ class CreateData:
         self.nr_samples = nr_samples
         self.degree = degree
         self.seed = seed
+
+    def set_nr_samples(self, nr_samples):
+        self.nr_samples = nr_samples
+
+    def set_poly_degree(self, poly_degree):
+        self.degree = poly_degree

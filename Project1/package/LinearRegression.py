@@ -10,10 +10,11 @@ from sklearn.linear_model import Lasso
 
 
 class OlsModel:
-    def __init__(self):
+    def __init__(self, seed=None):
         self.coef_ = None
         self.coef_var = None
         self.z_var = None
+        self.seed = None
 
     def fit(self, X, z):
         self.coef_ = np.linalg.pinv(X.T @ X) @ X.T @ z
@@ -47,11 +48,14 @@ class OlsModel:
 
 
 class RidgeModel(OlsModel):
-    def __init__(self, lambda_):
+    def __init__(self, lambda_=None):
         super().__init__()
         self.lambda_ = lambda_
 
     def fit(self, X, z):
+        if self.lambda_ is None:
+            raise ValueError("Lambda can not be None. Set lambda.")
+
         p = np.shape(X)[1]
         I = np.identity(p)*self.lambda_
         self.coef_ = np.linalg.pinv( (X.T @ X) + I) @ X.T @ z
@@ -60,11 +64,9 @@ class RidgeModel(OlsModel):
         self.lambda_ = new_lambda
 
 
-class LassoModel(RidgeModel):
-    def __init__(self, lambda_):
-        super().__init__(lambda_)
+class LassoModel(Lasso):
+    def __init__(self, alpha=1, fit_intercept=False, random_state=None):
+        super().__init__(alpha, fit_intercept, random_state)
 
-    def fit(self, X, z):
-        l = Lasso(alpha=self.lambda_, fit_intercept=False,
-                  normalize=False).fit(X, z)
-        self.coef_ = l.coef_
+    def set_lambda(self, new_lambda):
+        self.alpha = new_lambda
