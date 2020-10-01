@@ -5,8 +5,6 @@
 
 
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.utils import resample
 
 
 def r2(y_real, y_predict):
