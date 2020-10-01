@@ -145,119 +145,6 @@ class GridSearch:
         plt.show()
 
 
-class PlotCOMPLEXITYxMSE:
-
-    def __init__(self, data, model, random_state=None):
-        self.data = data(random_state=random_state)
-        self.ML_model = model(random_state=random_state)
-        self.random_state = random_state
-
-    def run(self, nr_samples, poly_degrees, lambda_=1,
-            test_size=0.2, scale=True, terrain=None):
-
-        mse_train, mse_test, r2_train, r2_test = \
-            None, None, None, None
-
-        if isinstance(poly_degrees, int) is False:
-            function_of = "d"
-
-            mse_train = np.zeros(shape=len(poly_degrees))
-            mse_test = np.zeros(shape=len(poly_degrees))
-            r2_train = np.zeros(shape=len(poly_degrees))
-            r2_test = np.zeros(shape=len(poly_degrees))
-
-            for idx, i in enumerate(poly_degrees):
-                X, z = self.data.fit(
-                    nr_samples=nr_samples,
-                    degree=i,
-                    terrain_file=terrain
-                )
-
-                X_train, X_test, z_train, z_test = \
-                    self._split_scale(X, z, scale, test_size)
-
-                self.ML_model.fit(X_train, z_train)
-
-                z_predict_train = self.ML_model.predict(X_train)
-                z_predict_test = self.ML_model.predict(X_test)
-
-                mse_train[idx] = mse(z_train, z_predict_train)
-                mse_test[idx] = mse(z_test, z_predict_test)
-
-                r2_train[idx] = r2(z_train, z_predict_train)
-                r2_test[idx] = r2(z_test, z_predict_test)
-
-            self._plot_COMPLEXITY_x_MSE(
-                poly_degrees, mse_train, mse_test)
-
-        if isinstance(nr_samples, int) is False:
-            function_of = "n"
-
-            mse_train = np.zeros(shape=len(nr_samples))
-            mse_test = np.zeros(shape=len(nr_samples))
-            r2_train = np.zeros(shape=len(nr_samples))
-            r2_test = np.zeros(shape=len(nr_samples))
-
-            for idx, i in enumerate(nr_samples):
-                X, z = self.data.fit(
-                    nr_samples=i,
-                    degree=poly_degrees,
-                    terrain_file=terrain
-                )
-
-                X_train, X_test, z_train, z_test = \
-                    self._split_scale(X, z, scale, test_size)
-
-                self.ML_model.fit(X_train, z_train)
-
-                z_predict_train = self.ML_model.predict(X_train)
-                z_predict_test = self.ML_model.predict(X_test)
-
-                mse_train[idx] = mse(z_train, z_predict_train)
-                mse_test[idx] = mse(z_test, z_predict_test)
-
-                r2_train[idx] = r2(z_train, z_predict_train)
-                r2_test[idx] = r2(z_test, z_predict_test)
-
-            self._plot_COMPLEXITY_x_MSE(
-                poly_degrees, mse_train, mse_test)
-
-    def _split_scale(self, X, z, scale, test_size):
-
-        X_train, X_test, z_train, z_test = \
-            None, None, None, None
-
-        # splitting dataset
-        X_train, X_test, z_train, z_test = \
-            train_test_split(
-                X, z, test_size=test_size,
-                random_state=self.random_state)
-
-        if scale is True:
-            # scaling dataset
-            scaler = StandardScaler(with_mean=False,
-                                    with_std=True)
-            scaler.fit(X_train)
-            X_test = scaler.transform(X_test)
-            X_train = scaler.transform(X_train)
-
-        return X_train, X_test, z_train, z_test
-
-    @staticmethod
-    def _plot_COMPLEXITY_x_MSE(complexity, mse_train, mse_test):
-        """Plotting MSE train and MSE test for different
-        poly_degrees."""
-
-        plt.plot(complexity, mse_train, "--", label='MSE Train')
-        plt.plot(complexity, mse_test, label='MSE Test')
-        plt.xlabel("Complexity: Polynomial degrees")
-        plt.ylabel("MSE scores")
-        plt.title("MSE train and MSE test, with nr_sample=148, for "
-                  "different poly_degrees")
-        plt.legend()
-        plt.show()
-
-
 class BiasVarianceTradeOff:
 
     def __init__(self, data, model, random_state=None):
@@ -266,19 +153,19 @@ class BiasVarianceTradeOff:
         self.random_state = random_state
 
     def run(self, nr_samples, poly_degrees, lambda_=1, n_boostraps=1,
-            test_size=0.2, scale=True, terrain=None, ylim=(0, 1)):
+            test_size=0.2, scale=True, terrain=None, verboose=False,
+            plot=False):
 
         if isinstance(poly_degrees, int) is False:
 
             error = np.zeros(shape=len(poly_degrees))
             bias = np.zeros(shape=len(poly_degrees))
             variance = np.zeros(shape=len(poly_degrees))
-            z_test, z_tilde = None, None
 
-            for idx, i in enumerate(poly_degrees):
+            for idx, c in enumerate(poly_degrees):
                 X, z = self.data.fit(
                     nr_samples=nr_samples,
-                    degree=i,
+                    degree=c,
                     terrain_file=terrain
                 )
 
@@ -287,18 +174,36 @@ class BiasVarianceTradeOff:
 
                 z_tilde = np.empty((z_test.shape[0], n_boostraps))
 
-                for i in range(n_boostraps):
-                    x_, y_ = resample(X_train, z_train)
-                    self.ML_model.fit(x_, y_)
-                    z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
+                if n_boostraps == 1:
+                    self.ML_model.fit(X_train, z_train)
+                    z_tilde[:, 0] = self.ML_model.predict(X_test).ravel()
 
-                error[idx] = np.mean(np.mean((z_test - z_tilde) ** 2, axis=1, keepdims=True))
-                bias[idx] = np.mean((z_test - np.mean(z_tilde, axis=1, keepdims=True)) ** 2)
-                variance[idx] = np.mean(np.var(z_tilde, axis=1, keepdims=True))
+                elif n_boostraps > 1:
+                    for i in range(n_boostraps):
+                        x_, y_ = resample(X_train, z_train)
+                        self.ML_model.fit(x_, y_)
+                        z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
 
-            self._plot(ylim, poly_degrees, error, bias, variance)
+                # storing error/mse
+                error[idx] = np.mean(
+                    np.mean((z_test - z_tilde) ** 2, axis=1, keepdims=True))
 
-            return error, bias, variance, z_test, z_tilde
+                # storing bias2
+                bias[idx] = np.mean(
+                    (z_test - np.mean(z_tilde, axis=1, keepdims=True)) ** 2)
+
+                # storing variance
+                variance[idx] = np.mean(
+                    np.var(z_tilde, axis=1, keepdims=True))
+
+                if verboose is True:
+                    self._verboose(idx=idx, complexity=c, error=error,
+                                   bias=bias, variance=variance)
+
+            if plot is True:
+                self._plot(poly_degrees, error, bias, variance)
+
+            return error, bias, variance
 
     def _split_scale(self, X, z, scale, test_size):
 
@@ -321,13 +226,21 @@ class BiasVarianceTradeOff:
 
         return X_train, X_test, z_train, z_test
 
-    def _plot(self, ylim, complexities, error, bias, variance):
+    def _plot(self, complexities, error, bias, variance):
         plt.plot(complexities, error, label='Error/MSE')
         plt.plot(complexities, bias, "--", label='bias')
         plt.plot(complexities, variance, label='Variance')
         plt.ylabel("Metrics: [Error/MSE, bias^2 and variance]")
         plt.xlabel("Polynomial degrees")
         plt.title("Bias-variance tradeoff")
-        plt.ylim(ylim)
         plt.legend()
         plt.show()
+
+    def _verboose(self, idx, complexity, error, bias, variance):
+        print('Complexity: ', complexity)
+        print('Error: ', error[idx])
+        print('Bias^2: ', bias[idx])
+        print('Var: ', variance[idx])
+        print('{} >= {} + {} = {}'
+              .format(error[idx], bias[idx], variance[idx],
+                      bias[idx] + variance[idx]))
