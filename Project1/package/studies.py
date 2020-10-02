@@ -258,6 +258,7 @@ class CrossValidationKFolds:
         self.data = data(random_state=random_state)
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
+        np.random.seed(self.random_state)
 
     def run(self, nr_samples, poly_degrees, k, shuffle=True,
             plot=False):
@@ -283,10 +284,8 @@ class CrossValidationKFolds:
                 z_test_CV = z[element, :]
                 X_test_CV = X_std[element, :]
 
-                copy_X = X_std.copy()
-                copy_z = z.copy()
-                np.delete(copy_X, element)
-                np.delete(copy_z, element)
+                copy_z = np.delete(z, element)
+                copy_X = np.delete(X_std, element, axis=0)
 
                 # fitting, predicting and getting the mse for each fold
                 self.ML_model.fit(copy_X, copy_z)
@@ -296,11 +295,12 @@ class CrossValidationKFolds:
             avg_mse.append(np.mean(mse))
 
         if plot is True:
-            self._plot(poly_degrees, avg_mse)
+            self._plot(complexities=poly_degrees, avg_mse=avg_mse, k=k)
 
         return avg_mse
 
-    def _kfold(self, X, k, shuffle=True):
+    @staticmethod
+    def _kfold(X, k, shuffle=True):
         """
         Divide the data-set in k number of folds, shuffling the
         samples and picking the indexes without replacement.
@@ -315,9 +315,8 @@ class CrossValidationKFolds:
                                    divided samples.
         """
 
-        fold_size = X.shape[0] / k
+        fold_size = int(X.shape[0] / k)
         list_of_idx = np.arange(X.shape[0])
-        np.random.seed(self.random_state)
 
         if shuffle is True:
             np.random.shuffle(list_of_idx)
@@ -325,22 +324,22 @@ class CrossValidationKFolds:
         kfold_sample_idxs = []
         for _ in range(k):
             if list_of_idx.shape[0] <= fold_size:
-                list_of_idx_sliced = list_of_idx[:int(fold_size)]
+                list_of_idx_sliced = list_of_idx[:fold_size]
                 kfold_sample_idxs.append(list_of_idx_sliced)
 
             else:
-                list_of_idx_sliced = list_of_idx[:int(fold_size)]
+                list_of_idx_sliced = list_of_idx[:fold_size]
                 kfold_sample_idxs.append(list_of_idx_sliced)
-                list_of_idx = np.delete(list_of_idx, np.arange(int(fold_size)))
+                list_of_idx = np.delete(list_of_idx, np.arange(fold_size))
 
         return kfold_sample_idxs
 
     @staticmethod
-    def _plot(complexities, avg_mse):
+    def _plot(complexities, avg_mse, k):
         plt.plot(complexities, avg_mse, label='mse')
         plt.ylabel("MSE")
         plt.xlabel("Complexity: Polynomial degrees")
-        plt.title("K-fold Cross-validation")
+        plt.title("{}-folds Cross-validation".format(k))
         plt.legend()
         plt.show()
 
@@ -348,7 +347,7 @@ class CrossValidationKFolds:
 class CrossValidationSKlearn:
     def __init__(self, data, model, random_state=None):
         self.data = data(random_state=random_state)
-        self.ML_model = model(random_state=random_state)
+        self.ML_model = model
         self.random_state = random_state
 
     def run(self, nr_samples, poly_degrees, k, shuffle=True,
@@ -365,12 +364,13 @@ class CrossValidationSKlearn:
             scaler.fit(X)
             X_std = scaler.transform(X)
 
-            kfold = KFold(n_splits=k)
+            kfold = KFold(n_splits=k, random_state=self.random_state,
+                          shuffle=shuffle)
 
             estimated_mse_folds = \
-                cross_val_score(
-                    self.ML_model, X_std, z,
-                    scoring='neg_mean_squared_error', cv=kfold)
+                cross_val_score(self.ML_model, X_std, z,
+                                scoring='neg_mean_squared_error',
+                                cv=kfold)
 
             # cross_val_score return an array containing the
             # estimated negative mse for every fold.
@@ -379,14 +379,15 @@ class CrossValidationSKlearn:
             avg_mse.append(np.mean(-estimated_mse_folds))
 
         if plot is True:
-            self._plot(complexities=poly_degrees, avg_mse=avg_mse)
+            self._plot(complexities=poly_degrees, avg_mse=avg_mse, k=k)
 
         return avg_mse
 
-    def _plot(self, complexities, avg_mse):
+    @staticmethod
+    def _plot(complexities, avg_mse, k):
         plt.plot(complexities, avg_mse, label='mse')
         plt.ylabel("MSE")
         plt.xlabel("Complexity: Polynomial degrees")
-        plt.title("SKLearn kfold cross-validation")
+        plt.title("SKLearn {}-folds cross-validation".format(k))
         plt.legend()
         plt.show()
