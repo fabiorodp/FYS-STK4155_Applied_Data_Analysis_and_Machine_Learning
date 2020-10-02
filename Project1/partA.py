@@ -4,12 +4,12 @@
 # E-mail: fabior@uio.no
 
 
+import numpy as np
 from package.create_dataset import CreateData
 from package.linear_models import OLS
 from package.accuracies import r2, mse
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import numpy as np
 
 
 for degree in np.arange(2, 6):
