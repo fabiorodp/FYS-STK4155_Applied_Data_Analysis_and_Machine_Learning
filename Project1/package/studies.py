@@ -152,7 +152,7 @@ class BiasVarianceTradeOff:
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
 
-    def run(self, nr_samples, poly_degrees, lambda_=1, n_boostraps=1,
+    def run(self, nr_samples, poly_degrees, lambda_=1, n_boostraps=100,
             test_size=0.2, scale=True, terrain=None, verboose=False,
             plot=False):
 
@@ -174,15 +174,10 @@ class BiasVarianceTradeOff:
 
                 z_tilde = np.empty((z_test.shape[0], n_boostraps))
 
-                if n_boostraps == 1:
-                    self.ML_model.fit(X_train, z_train)
-                    z_tilde[:, 0] = self.ML_model.predict(X_test).ravel()
-
-                elif n_boostraps > 1:
-                    for i in range(n_boostraps):
-                        x_, y_ = resample(X_train, z_train)
-                        self.ML_model.fit(x_, y_)
-                        z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
+                for i in range(n_boostraps):
+                    x_, y_ = resample(X_train, z_train)
+                    self.ML_model.fit(x_, y_)
+                    z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
 
                 # storing error/mse
                 error[idx] = np.mean(
