@@ -346,66 +346,47 @@ class CrossValidationKFolds:
 
 
 class CrossValidationSKlearn:
-    def __init__(self, CreateData, ML_Model, function_of="nr_samples",
-                 random_seed=10):
+    def __init__(self, data, model, random_state=None):
+        self.data = data(random_state=random_state)
+        self.ML_model = model(random_state=random_state)
+        self.random_state = random_state
 
-        self.random_seed = random_seed
-        self.CreateData = CreateData
-        self.ML_Model = ML_Model
-        self.function_of = function_of
+    def run(self, nr_samples, poly_degrees, k, shuffle=True,
+            plot=False):
 
-        self.complexities = None
-        self.mse = None
+        avg_mse = []
+        for degree in poly_degrees:
 
-    def fit(self, complexities, k=5, verboose=False):
+            # generating data-sets
+            X, z = self.data.fit(nr_samples=nr_samples, degree=degree)
 
-        self.complexities = np.zeros(len(complexities))
-        self.mse = np.zeros(len(complexities))
-        kfold = KFold(n_splits=k)
+            # scaling
+            scaler = StandardScaler(with_mean=False, with_std=True)
+            scaler.fit(X)
+            X_std = scaler.transform(X)
 
-        for cplx_idx, complexity in enumerate(complexities):
-            self.complexities[cplx_idx] = complexity
-
-            # calling the regression model
-            model = self.ML_Model
-
-            # generating data
-            cd = self.CreateData
-            X, z = None, None
-
-            if self.function_of == "poly_degrees":
-                cd.set_poly_degree(complexity)
-                cd.fit()
-                X, z = cd.get()
-
-            elif self.function_of == "lambda":
-                cd.fit()
-                X, z = cd.get()
-                model.set_lambda(complexity)
+            kfold = KFold(n_splits=k)
 
             estimated_mse_folds = \
                 cross_val_score(
-                    model, X, z[:, np.newaxis],
+                    self.ML_model, X_std, z,
                     scoring='neg_mean_squared_error', cv=kfold)
 
-            # cross_val_score return an array containing the estimated negative mse for every fold.
-            # we have to the the mean of every array in order to get an estimate of the mse of the model
-            self.mse[cplx_idx] = np.mean(-estimated_mse_folds)
+            # cross_val_score return an array containing the
+            # estimated negative mse for every fold.
+            # we have to the the mean of every array to
+            # get an estimate of the mse of the model
+            avg_mse.append(np.mean(-estimated_mse_folds))
 
-    def plot(self):
-        plt.plot(self.complexities, self.mse, label='mse')
+        if plot is True:
+            self._plot(complexities=poly_degrees, avg_mse=avg_mse)
 
+        return avg_mse
+
+    def _plot(self, complexities, avg_mse):
+        plt.plot(complexities, avg_mse, label='mse')
         plt.ylabel("MSE")
-
-        if self.function_of == "poly_degrees":
-            plt.xlabel("Complexity: Polynomial degrees")
-
-        elif self.function_of == "nr_samples":
-            plt.xlabel("Complexity: Number of samples")
-
-        elif self.function_of == "lambda":
-            plt.xlabel("Complexity: Lambda value")
-
-        plt.title("Cross Validation")
+        plt.xlabel("Complexity: Polynomial degrees")
+        plt.title("SKLearn kfold cross-validation")
         plt.legend()
         plt.show()
