@@ -5,17 +5,11 @@
 
 
 from package.create_dataset import CreateData
-from package.linear_models import OLS, Ridge, Lasso
-from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-
-from package.studies import GridSearch, BiasVarianceTradeOff
-
-import seaborn as sns
+from package.linear_models import OLS
+from package.studies import GridSearch
+from package.studies import BiasVarianceTradeOff
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 
 
 # choosing parameters
@@ -47,6 +41,7 @@ ff = BiasVarianceTradeOff(data=CreateData, model=OLS,
                           random_state=10)
 
 error, bias, variance = \
-    ff.run(nr_samples=20, poly_degrees=poly_degrees, lambda_=1,
-           n_boostraps=1, test_size=0.2, scale=True, terrain=None,
-           verboose=True, plot=True)
+    ff.run(nr_samples=20, poly_degrees=poly_degrees[: -1],
+           lambda_=1, n_boostraps=100, test_size=0.2,
+           scale=True, terrain=None, verboose=True,
+           plot=True)
