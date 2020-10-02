@@ -7,6 +7,8 @@
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
 from sklearn.utils import resample
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -239,3 +241,171 @@ class BiasVarianceTradeOff:
         print('{} >= {} + {} = {}'
               .format(error[idx], bias[idx], variance[idx],
                       bias[idx] + variance[idx]))
+
+
+class CrossValidationKFolds:
+    """Perform the k-fold Cross-Validation."""
+
+    def __init__(self, data, model, random_state=None):
+        """
+        Constructor to initialize the class.
+
+        :param data: class object:  To generate the data-set.
+        :param model: class object: To perform the fitting
+                                    and predictions.
+        :param random_state: float: Number of the seed.
+        """
+        self.data = data(random_state=random_state)
+        self.ML_model = model(random_state=random_state)
+        self.random_state = random_state
+
+    def run(self, nr_samples, poly_degrees, k, shuffle=True,
+            plot=False):
+
+        avg_mse = []
+        for degree in poly_degrees:
+
+            # generating data-sets
+            X, z = self.data.fit(nr_samples=nr_samples, degree=degree)
+
+            # scaling
+            scaler = StandardScaler(with_mean=False, with_std=True)
+            scaler.fit(X)
+            X_std = scaler.transform(X)
+
+            # getting k-fold with the sample indexes
+            kfold_sample_idxs = self._kfold(k=k, X=X_std,
+                                            shuffle=shuffle)
+
+            mse = []
+            for element in kfold_sample_idxs:
+                # separating the test fold from the k-1 training folds
+                z_test_CV = z[element, :]
+                X_test_CV = X_std[element, :]
+
+                copy_X = X_std.copy()
+                copy_z = z.copy()
+                np.delete(copy_X, element)
+                np.delete(copy_z, element)
+
+                # fitting, predicting and getting the mse for each fold
+                self.ML_model.fit(copy_X, copy_z)
+                z_tilde_CV = self.ML_model.predict(X_test_CV)
+                mse.append(mean_squared_error(z_test_CV, z_tilde_CV))
+
+            avg_mse.append(np.mean(mse))
+
+        if plot is True:
+            self._plot(poly_degrees, avg_mse)
+
+        return avg_mse
+
+    def _kfold(self, X, k, shuffle=True):
+        """
+        Divide the data-set in k number of folds, shuffling the
+        samples and picking the indexes without replacement.
+
+        :param X: nd-array: Design matrix.
+        :param k: int: Number of folds.
+        :param shuffle: bool: Shuffle the samples before divide
+                              the folds.
+
+        :return: list of nd-array: A list of nd-arrays with k-fold
+                                   containing the indexes of the
+                                   divided samples.
+        """
+
+        fold_size = X.shape[0] / k
+        list_of_idx = np.arange(X.shape[0])
+        np.random.seed(self.random_state)
+
+        if shuffle is True:
+            np.random.shuffle(list_of_idx)
+
+        kfold_sample_idxs = []
+        for _ in range(k):
+            if list_of_idx.shape[0] <= fold_size:
+                list_of_idx_sliced = list_of_idx[:int(fold_size)]
+                kfold_sample_idxs.append(list_of_idx_sliced)
+
+            else:
+                list_of_idx_sliced = list_of_idx[:int(fold_size)]
+                kfold_sample_idxs.append(list_of_idx_sliced)
+                list_of_idx = np.delete(list_of_idx, np.arange(int(fold_size)))
+
+        return kfold_sample_idxs
+
+    @staticmethod
+    def _plot(complexities, avg_mse):
+        plt.plot(complexities, avg_mse, label='mse')
+        plt.ylabel("MSE")
+        plt.xlabel("Complexity: Polynomial degrees")
+        plt.title("K-fold Cross-validation")
+        plt.legend()
+        plt.show()
+
+
+class CrossValidationSKlearn:
+    def __init__(self, CreateData, ML_Model, function_of="nr_samples",
+                 random_seed=10):
+
+        self.random_seed = random_seed
+        self.CreateData = CreateData
+        self.ML_Model = ML_Model
+        self.function_of = function_of
+
+        self.complexities = None
+        self.mse = None
+
+    def fit(self, complexities, k=5, verboose=False):
+
+        self.complexities = np.zeros(len(complexities))
+        self.mse = np.zeros(len(complexities))
+        kfold = KFold(n_splits=k)
+
+        for cplx_idx, complexity in enumerate(complexities):
+            self.complexities[cplx_idx] = complexity
+
+            # calling the regression model
+            model = self.ML_Model
+
+            # generating data
+            cd = self.CreateData
+            X, z = None, None
+
+            if self.function_of == "poly_degrees":
+                cd.set_poly_degree(complexity)
+                cd.fit()
+                X, z = cd.get()
+
+            elif self.function_of == "lambda":
+                cd.fit()
+                X, z = cd.get()
+                model.set_lambda(complexity)
+
+            estimated_mse_folds = \
+                cross_val_score(
+                    model, X, z[:, np.newaxis],
+                    scoring='neg_mean_squared_error', cv=kfold)
+
+            # cross_val_score return an array containing the estimated negative mse for every fold.
+            # we have to the the mean of every array in order to get an estimate of the mse of the model
+            self.mse[cplx_idx] = np.mean(-estimated_mse_folds)
+
+    def plot(self):
+        plt.plot(self.complexities, self.mse, label='mse')
+
+        plt.ylabel("MSE")
+
+        if self.function_of == "poly_degrees":
+            plt.xlabel("Complexity: Polynomial degrees")
+
+        elif self.function_of == "nr_samples":
+            plt.xlabel("Complexity: Number of samples")
+
+        elif self.function_of == "lambda":
+            plt.xlabel("Complexity: Lambda value")
+
+        plt.title("Cross Validation")
+        plt.legend()
+        plt.show()
