@@ -5,6 +5,7 @@
 
 
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 from package.create_dataset import CreateData
 from package.linear_models import OLS
@@ -16,6 +17,7 @@ k = np.arange(5, 11)
 poly_degrees = np.arange(2, 9)
 nr_samples = 20
 
+# #################################### k-folds cross-validation:
 kf_avg = []
 skkf_avf = []
 
@@ -36,29 +38,38 @@ for i in k:
         sk_kf_cv.run(nr_samples=20, poly_degrees=np.arange(2, 9),
                      k=i, shuffle=True, plot=False))
 
+# ######################## printing testing MSE for each k-fold:
 print("Testing MSE for our k-folds CV: ", kf_avg)
 print("\n Testing MSE for SkLearn k-folds CV: ", skkf_avf)
 
-plt.plot(poly_degrees, kf_avg[0], "-", label="5-fold Testing MSE")
-plt.plot(poly_degrees, kf_avg[1], "--", label="6-fold Testing MSE")
-plt.plot(poly_degrees, kf_avg[2], "-.", label="7-fold Testing MSE")
-plt.plot(poly_degrees, kf_avg[3], "x", label="8-fold Testing MSE")
-plt.plot(poly_degrees, kf_avg[4], "+", label="9-fold Testing MSE")
-plt.plot(poly_degrees, kf_avg[5], "|", label="10-fold Testing MSE")
+# ############################## plotting lines for each k-fold:
+signs = ["-", "--", "-.", "x", "+", "|"]
+labels = ["5-fold Testing MSE", "6-fold Testing MSE",
+          "7-fold Testing MSE", "8-fold Testing MSE",
+          "9-fold Testing MSE", "10-fold Testing MSE"]
+
+for e, sign, label in zip(kf_avg, signs, labels):
+    plt.plot(poly_degrees, e, sign, label=label)
+
 plt.ylabel("Training MSE")
 plt.xlabel("Complexity: Polynomial degrees")
 plt.title("Our {}-folds cross-validation".format(k))
 plt.legend()
 plt.show()
 
-plt.plot(poly_degrees, skkf_avf[0], "-", label="5-fold Testing MSE")
-plt.plot(poly_degrees, skkf_avf[1], "--", label="6-fold Testing MSE")
-plt.plot(poly_degrees, skkf_avf[2], "-.", label="7-fold Testing MSE")
-plt.plot(poly_degrees, skkf_avf[3], "x", label="8-fold Testing MSE")
-plt.plot(poly_degrees, skkf_avf[4], "+", label="9-fold Testing MSE")
-plt.plot(poly_degrees, skkf_avf[5], "|", label="10-fold Testing MSE")
+# ############ plotting Sci-Kit learn k-folds cross-validation:
+for e, sign, label in zip(skkf_avf, signs, labels):
+    plt.plot(poly_degrees, e, sign, label=label)
+
 plt.ylabel("Training MSE")
 plt.xlabel("Complexity: Polynomial degrees")
 plt.title("Sklearn {}-folds cross-validation".format(k))
 plt.legend()
+plt.show()
+
+# heat-map with poly_degrees x k-folds testing MSE results:
+sns.heatmap(data=kf_avg, xticklabels=poly_degrees,
+            yticklabels=k, annot=True)
+plt.xlabel("Polynomial degrees")
+plt.ylabel("k-folds")
 plt.show()

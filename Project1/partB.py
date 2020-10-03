@@ -23,7 +23,7 @@ gs = GridSearch(data=CreateData, model=OLS, random_state=10)
 mse_train, mse_test, r2_train, r2_test = \
     gs.run(nr_samples=nr_samples,
            poly_degrees=poly_degrees,
-           lambda_=1, test_size=0.2, scale=True, terrain=None,
+           lambda_=None, test_size=0.2, scale=True, terrain=None,
            plot_results=True, print_results=True)
 
 # plotting result for nr_samples=20 and poly_degrees from 2 to 9
@@ -42,6 +42,6 @@ ff = BiasVarianceTradeOff(data=CreateData, model=OLS,
 
 error, bias, variance = \
     ff.run(nr_samples=20, poly_degrees=poly_degrees[: -1],
-           lambda_=1, n_boostraps=100, test_size=0.2,
+           lambda_=None, n_boostraps=100, test_size=0.2,
            scale=True, terrain=None, verboose=True,
            plot=True)
