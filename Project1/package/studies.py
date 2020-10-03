@@ -16,6 +16,8 @@ import numpy as np
 
 
 class GridSearch:
+    """Class to find the best parameters for nr_samples,
+    poly_degrees or lambdas."""
 
     def __init__(self, data, model, random_state=None):
         self.data = data(random_state=random_state)
@@ -148,6 +150,7 @@ class GridSearch:
 
 
 class BiasVarianceTradeOff:
+    """Class to decompose the bias-variance trade-off."""
 
     def __init__(self, data, model, random_state=None):
         self.data = data(random_state=random_state)
@@ -227,7 +230,7 @@ class BiasVarianceTradeOff:
         plt.plot(complexities, error, label='Error/MSE')
         plt.plot(complexities, bias, "--", label='bias')
         plt.plot(complexities, variance, label='Variance')
-        plt.ylabel("Metrics: [Error/MSE, bias^2 and variance]")
+        plt.ylabel("Metrics: [Error, Bias^2 and Variance]")
         plt.xlabel("Polynomial degrees")
         plt.title("Bias-variance tradeoff")
         plt.legend()
@@ -244,7 +247,7 @@ class BiasVarianceTradeOff:
 
 
 class CrossValidationKFolds:
-    """Perform the k-fold Cross-Validation."""
+    """Class to perform the k-fold cross-validation."""
 
     def __init__(self, data, model, random_state=None):
         """
@@ -280,18 +283,20 @@ class CrossValidationKFolds:
 
             mse = []
             for element in kfold_sample_idxs:
-                # separating the test fold from the k-1 training folds
+                # separating the test fold from the training data
                 z_test_CV = z[element, :]
                 X_test_CV = X_std[element, :]
 
+                # making the training data without the test fold
                 copy_z = np.delete(z, element)
                 copy_X = np.delete(X_std, element, axis=0)
 
-                # fitting, predicting and getting the mse for each fold
+                # fitting, predicting and getting the MSE for each fold
                 self.ML_model.fit(copy_X, copy_z)
                 z_tilde_CV = self.ML_model.predict(X_test_CV)
                 mse.append(mean_squared_error(z_test_CV, z_tilde_CV))
 
+            # appending the average MSE
             avg_mse.append(np.mean(mse))
 
         if plot is True:
@@ -314,7 +319,6 @@ class CrossValidationKFolds:
                                    containing the indexes of the
                                    divided samples.
         """
-
         fold_size = int(X.shape[0] / k)
         list_of_idx = np.arange(X.shape[0])
 
@@ -330,21 +334,24 @@ class CrossValidationKFolds:
             else:
                 list_of_idx_sliced = list_of_idx[:fold_size]
                 kfold_sample_idxs.append(list_of_idx_sliced)
-                list_of_idx = np.delete(list_of_idx, np.arange(fold_size))
+                list_of_idx = np.delete(list_of_idx,
+                                        np.arange(fold_size))
 
         return kfold_sample_idxs
 
     @staticmethod
     def _plot(complexities, avg_mse, k):
-        plt.plot(complexities, avg_mse, label='mse')
-        plt.ylabel("MSE")
+        plt.plot(complexities, avg_mse, "--", label='MSE')
+        plt.ylabel("Training MSE")
         plt.xlabel("Complexity: Polynomial degrees")
-        plt.title("{}-folds Cross-validation".format(k))
+        plt.title("Our {}-folds cross-validation".format(k))
         plt.legend()
         plt.show()
 
 
 class CrossValidationSKlearn:
+    """Class to perform sklearn k-fold cross-validation."""
+
     def __init__(self, data, model, random_state=None):
         self.data = data(random_state=random_state)
         self.ML_model = model
@@ -385,8 +392,8 @@ class CrossValidationSKlearn:
 
     @staticmethod
     def _plot(complexities, avg_mse, k):
-        plt.plot(complexities, avg_mse, label='mse')
-        plt.ylabel("MSE")
+        plt.plot(complexities, avg_mse, "--", label='mse')
+        plt.ylabel("Training MSE")
         plt.xlabel("Complexity: Polynomial degrees")
         plt.title("SKLearn {}-folds cross-validation".format(k))
         plt.legend()
