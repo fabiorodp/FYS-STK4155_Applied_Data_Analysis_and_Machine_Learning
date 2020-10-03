@@ -24,48 +24,116 @@ class GridSearch:
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
 
-    def run(self, nr_samples, poly_degrees, lambda_=1,
+    def run(self, nr_samples, poly_degrees, lambda_=None,
             test_size=0.2, scale=True, terrain=None,
             plot_results=False, print_results=False):
 
-        mse_train = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
-        mse_test = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
-        r2_train = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
-        r2_test = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
+        if lambda_ is not None:
+            mse_train = np.zeros(shape=(len(lambda_), len(poly_degrees)))
+            mse_test = np.zeros(shape=(len(lambda_), len(poly_degrees)))
+            r2_train = np.zeros(shape=(len(lambda_), len(poly_degrees)))
+            r2_test = np.zeros(shape=(len(lambda_), len(poly_degrees)))
 
-        for n_idx, n in enumerate(nr_samples):
+            for n_idx, n in enumerate(lambda_):
+                for d_idx, d in enumerate(poly_degrees):
 
-            for d_idx, d in enumerate(poly_degrees):
+                    X, z = self.data.fit(
+                        nr_samples=nr_samples,
+                        degree=d,
+                        terrain_file=terrain
+                    )
 
-                X, z = self.data.fit(
-                    nr_samples=n,
-                    degree=d,
-                    terrain_file=terrain
-                )
+                    X_train, X_test, z_train, z_test = \
+                        self._split_scale(X, z, scale, test_size)
 
-                X_train, X_test, z_train, z_test = \
-                    self._split_scale(X, z, scale, test_size)
+                    self.ML_model.set_lambda(new_lambda=n)
+                    self.ML_model.fit(X_train, z_train)
 
-                self.ML_model.fit(X_train, z_train)
+                    z_hat = self.ML_model.predict(X_train)
+                    z_tilde = self.ML_model.predict(X_test)
 
-                z_hat = self.ML_model.predict(X_train)
-                z_tilde = self.ML_model.predict(X_test)
+                    mse_train[n_idx, d_idx] = mean_squared_error(z_train, z_hat)
+                    mse_test[n_idx, d_idx] = mean_squared_error(z_test, z_tilde)
 
-                mse_train[n_idx, d_idx] = mean_squared_error(z_train, z_hat)
-                mse_test[n_idx, d_idx] = mean_squared_error(z_test, z_tilde)
+                    r2_train[n_idx, d_idx] = r2_score(z_train, z_hat)
+                    r2_test[n_idx, d_idx] = r2_score(z_test, z_tilde)
 
-                r2_train[n_idx, d_idx] = r2_score(z_train, z_hat)
-                r2_test[n_idx, d_idx] = r2_score(z_test, z_tilde)
+            if print_results is True:
+                parameter_1st = poly_degrees
+                parameter_2nd = lambda_
 
-        if print_results is True:
-            self._print_best_results(nr_samples, poly_degrees, mse_train,
-                                     mse_test, r2_train, r2_test)
+                self._print_best_results(
+                    parameter_1st=parameter_1st, parameter_2nd=parameter_2nd,
+                    mse_train=mse_train, mse_test=mse_test,
+                    r2_train=r2_train, r2_test=r2_test)
 
-        if plot_results is True:
-            self._plot_heat_map(nr_samples, mse_train, poly_degrees,
-                                mse_test, r2_train, r2_test)
+            if plot_results is True:
+                x_legend = "Polynomial degrees"
+                y_legend = "Lambdas"
+                x_label = poly_degrees
+                y_label = lambda_
+                annot = True
 
-        return mse_train, mse_test, r2_train, r2_test
+                self._plot_heat_map(
+                    x_legend=x_legend, y_legend=y_legend,
+                    x_label=x_label, y_label=y_label, annot=annot,
+                    mse_train=mse_train, mse_test=mse_test,
+                    r2_train=r2_train, r2_test=r2_test)
+
+            return mse_train, mse_test, r2_train, r2_test
+
+        else:
+            mse_train = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
+            mse_test = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
+            r2_train = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
+            r2_test = np.zeros(shape=(len(nr_samples), len(poly_degrees)))
+
+            for n_idx, n in enumerate(nr_samples):
+                for d_idx, d in enumerate(poly_degrees):
+
+                    X, z = self.data.fit(
+                        nr_samples=n,
+                        degree=d,
+                        terrain_file=terrain
+                    )
+
+                    X_train, X_test, z_train, z_test = \
+                        self._split_scale(X, z, scale, test_size)
+
+                    self.ML_model.fit(X_train, z_train)
+
+                    z_hat = self.ML_model.predict(X_train)
+                    z_tilde = self.ML_model.predict(X_test)
+
+                    mse_train[n_idx, d_idx] = mean_squared_error(z_train, z_hat)
+                    mse_test[n_idx, d_idx] = mean_squared_error(z_test, z_tilde)
+
+                    r2_train[n_idx, d_idx] = r2_score(z_train, z_hat)
+                    r2_test[n_idx, d_idx] = r2_score(z_test, z_tilde)
+
+            if print_results is True:
+                parameter_1st = poly_degrees
+                parameter_2nd = nr_samples
+
+                self._print_best_results(
+                    parameter_1st=parameter_1st, parameter_2nd=parameter_2nd,
+                    mse_train=mse_train, mse_test=mse_test,
+                    r2_train=r2_train, r2_test=r2_test)
+
+            if plot_results is True:
+                x_legend = "Polynomial degrees"
+                y_legend = "Number of samples"
+                x_label = poly_degrees
+                y_label = nr_samples
+                annot = True
+
+                self._plot_heat_map(
+                    x_legend=x_legend, y_legend=y_legend,
+                    x_label=x_label, y_label=y_label, annot=annot,
+                    mse_train=mse_train, mse_test=mse_test,
+                    r2_train=r2_train, r2_test=r2_test)
+
+            return mse_train, mse_test, r2_train, r2_test
 
     def _split_scale(self, X, z, scale, test_size):
 
@@ -89,64 +157,54 @@ class GridSearch:
         return X_train, X_test, z_train, z_test
 
     @staticmethod
-    def _print_best_results(nr_samples, poly_degrees, mse_train,
+    def _print_best_results(parameter_1st, parameter_2nd, mse_train,
                             mse_test, r2_train, r2_test):
 
-        print("Best MSE for training: ", np.min(mse_train),
-              "\n with Nr_samples={} and poly_degree={}".format(
-                  nr_samples[np.argwhere(mse_train == np.min(mse_train))[0][0]],
-                  poly_degrees[np.argwhere(mse_train == np.min(mse_train))[0][1]])
-              )
+        metrics = ["MSE", "MSE", "R2", "R2"]
 
-        print("Best MSE for testing: ", np.min(mse_test),
-              "\n with Nr_samples={} and poly_degree={}".format(
-                  nr_samples[np.argwhere(mse_test == np.min(mse_test))[0][0]],
-                  poly_degrees[np.argwhere(mse_test == np.min(mse_test))[0][1]])
-              )
+        titles = ["Best MSE for training: ", "Best MSE for testing: ",
+                  "Best R2-score for training: ",
+                  "Best R2-score for testing: "]
 
-        print("Best R2-score for training: ", np.max(r2_train),
-              "\n with Nr_samples={} and poly_degree={}".format(
-                  nr_samples[np.argwhere(r2_train == np.max(r2_train))[0][0]],
-                  poly_degrees[np.argwhere(r2_train == np.max(r2_train))[0][1]])
-              )
+        datas = [mse_train, mse_test, r2_train, r2_test]
 
-        print("Best R2-score for testing: ", np.max(r2_test),
-              "\n with Nr_samples={} and poly_degree={}".format(
-                  nr_samples[np.argwhere(r2_test == np.max(r2_test))[0][0]],
-                  poly_degrees[np.argwhere(r2_test == np.max(r2_test))[0][1]])
-              )
+        for metric, title, data in zip(metrics, titles, datas):
+            if metric == "MSE":
+                print(title, np.min(data),
+                      "\n in Poly_degree={} and Parameter2={}".format(
+                          parameter_1st[np.argwhere(
+                              data == np.min(data))[0][1]],
+
+                          parameter_2nd[np.argwhere(
+                              data == np.min(data))[0][0]])
+                      )
+
+            elif metric == "R2":
+                print(title, np.max(data),
+                      "\n in Poly_degree={} and Parameter2={}".format(
+                          parameter_1st[np.argwhere(
+                              data == np.max(data))[0][1]],
+
+                          parameter_2nd[np.argwhere(
+                              data == np.max(data))[0][0]])
+                      )
 
     @staticmethod
-    def _plot_heat_map(nr_samples, mse_train, poly_degrees,
-                       mse_test, r2_train, r2_test):
+    def _plot_heat_map(x_legend, y_legend, x_label, y_label, annot,
+                       mse_train, mse_test, r2_train, r2_test):
 
-        sns.heatmap(data=mse_train, xticklabels=poly_degrees,
-                    yticklabels=nr_samples, annot=True)
-        plt.title("MSE values for Training")
-        plt.xlabel("Polynomial Degrees")
-        plt.ylabel("Number of samples")
-        plt.show()
+        datas = [mse_train, mse_test, r2_train, r2_test]
 
-        sns.heatmap(data=mse_test, xticklabels=poly_degrees,
-                    yticklabels=nr_samples, annot=True)
-        plt.title("MSE values for Testing")
-        plt.xlabel("Polynomial Degrees")
-        plt.ylabel("Number of samples")
-        plt.show()
+        titles = ["MSE values for Training", "MSE values for Testing",
+                  "R2-score values for Training", "R2-score values for Testing"]
 
-        sns.heatmap(data=r2_train, xticklabels=poly_degrees,
-                    yticklabels=nr_samples, annot=True)
-        plt.title("R2-score values for Training")
-        plt.xlabel("Polynomial Degrees")
-        plt.ylabel("Number of samples")
-        plt.show()
-
-        sns.heatmap(data=r2_test, xticklabels=poly_degrees,
-                    yticklabels=nr_samples, annot=True)
-        plt.title("R2-score values for Testing")
-        plt.xlabel("Polynomial Degrees")
-        plt.ylabel("Number of samples")
-        plt.show()
+        for data, title in zip(datas, titles):
+            sns.heatmap(data=data, xticklabels=x_label,
+                        yticklabels=y_label, annot=annot)
+            plt.title(title)
+            plt.xlabel(x_legend)
+            plt.ylabel(y_legend)
+            plt.show()
 
 
 class BiasVarianceTradeOff:
@@ -157,53 +215,55 @@ class BiasVarianceTradeOff:
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
 
-    def run(self, nr_samples, poly_degrees, lambda_=1, n_boostraps=100,
-            test_size=0.2, scale=True, terrain=None, verboose=False,
-            plot=False):
+    def run(self, nr_samples, poly_degrees, lambda_=None,
+            n_boostraps=100, test_size=0.2, scale=True,
+            terrain=None, verboose=False, plot=False):
 
-        if isinstance(poly_degrees, int) is False:
+        error = np.zeros(shape=len(poly_degrees))
+        bias = np.zeros(shape=len(poly_degrees))
+        variance = np.zeros(shape=len(poly_degrees))
 
-            error = np.zeros(shape=len(poly_degrees))
-            bias = np.zeros(shape=len(poly_degrees))
-            variance = np.zeros(shape=len(poly_degrees))
+        for idx, c in enumerate(poly_degrees):
+            X, z = self.data.fit(
+                nr_samples=nr_samples,
+                degree=c,
+                terrain_file=terrain
+            )
 
-            for idx, c in enumerate(poly_degrees):
-                X, z = self.data.fit(
-                    nr_samples=nr_samples,
-                    degree=c,
-                    terrain_file=terrain
-                )
+            X_train, X_test, z_train, z_test = \
+                self._split_scale(X, z, scale, test_size)
 
-                X_train, X_test, z_train, z_test = \
-                    self._split_scale(X, z, scale, test_size)
+            z_tilde = np.empty((z_test.shape[0], n_boostraps))
 
-                z_tilde = np.empty((z_test.shape[0], n_boostraps))
+            for i in range(n_boostraps):
+                x_, y_ = resample(X_train, z_train)
 
-                for i in range(n_boostraps):
-                    x_, y_ = resample(X_train, z_train)
-                    self.ML_model.fit(x_, y_)
-                    z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
+                if lambda_ is not None:
+                    self.ML_model.set_lambda(new_lambda=lambda_)
 
-                # storing error/mse
-                error[idx] = np.mean(
-                    np.mean((z_test - z_tilde) ** 2, axis=1, keepdims=True))
+                self.ML_model.fit(x_, y_)
+                z_tilde[:, i] = self.ML_model.predict(X_test).ravel()
 
-                # storing bias2
-                bias[idx] = np.mean(
-                    (z_test - np.mean(z_tilde, axis=1, keepdims=True)) ** 2)
+            # storing error
+            error[idx] = np.mean(
+                np.mean((z_test - z_tilde) ** 2, axis=1, keepdims=True))
 
-                # storing variance
-                variance[idx] = np.mean(
-                    np.var(z_tilde, axis=1, keepdims=True))
+            # storing bias2
+            bias[idx] = np.mean(
+                (z_test - np.mean(z_tilde, axis=1, keepdims=True)) ** 2)
 
-                if verboose is True:
-                    self._verboose(idx=idx, complexity=c, error=error,
-                                   bias=bias, variance=variance)
+            # storing variance
+            variance[idx] = np.mean(
+                np.var(z_tilde, axis=1, keepdims=True))
 
-            if plot is True:
-                self._plot(poly_degrees, error, bias, variance)
+            if verboose is True:
+                self._verboose(idx=idx, complexity=c, error=error,
+                               bias=bias, variance=variance)
 
-            return error, bias, variance
+        if plot is True:
+            self._plot(poly_degrees, error, bias, variance)
+
+        return error, bias, variance
 
     def _split_scale(self, X, z, scale, test_size):
 
@@ -227,8 +287,8 @@ class BiasVarianceTradeOff:
         return X_train, X_test, z_train, z_test
 
     def _plot(self, complexities, error, bias, variance):
-        plt.plot(complexities, error, label='Error/MSE')
-        plt.plot(complexities, bias, "--", label='bias')
+        plt.plot(complexities, error, label='Error')
+        plt.plot(complexities, bias, "--", label='bias^2')
         plt.plot(complexities, variance, label='Variance')
         plt.ylabel("Metrics: [Error, Bias^2 and Variance]")
         plt.xlabel("Polynomial degrees")
@@ -263,8 +323,8 @@ class CrossValidationKFolds:
         self.random_state = random_state
         np.random.seed(self.random_state)
 
-    def run(self, nr_samples, poly_degrees, k, shuffle=True,
-            plot=False):
+    def run(self, nr_samples, poly_degrees, k, lambda_=None,
+            shuffle=True, plot=False):
 
         avg_mse = []
         for degree in poly_degrees:
@@ -292,6 +352,9 @@ class CrossValidationKFolds:
                 copy_X = np.delete(X_std, element, axis=0)
 
                 # fitting, predicting and getting the MSE for each fold
+                if lambda_ is not None:
+                    self.ML_model.set_lambda(new_lambda=lambda_)
+
                 self.ML_model.fit(copy_X, copy_z)
                 z_tilde_CV = self.ML_model.predict(X_test_CV)
                 mse.append(mean_squared_error(z_test_CV, z_tilde_CV))
@@ -357,8 +420,8 @@ class CrossValidationSKlearn:
         self.ML_model = model
         self.random_state = random_state
 
-    def run(self, nr_samples, poly_degrees, k, shuffle=True,
-            plot=False):
+    def run(self, nr_samples, poly_degrees, k,
+            shuffle=True, plot=False):
 
         avg_mse = []
         for degree in poly_degrees:
