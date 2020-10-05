@@ -72,15 +72,6 @@ class LassoModel(Ridge):
 
     def fit(self, X, z):
         lr = Lasso(alpha=self.lambda_, fit_intercept=False,
-                   max_iter=10000, random_state=self.random_state)
+                   random_state=self.random_state)
         lr.fit(X, z)
         self.coef_ = lr.coef_
-
-# class LassoModel(Lasso):
-#
-#     def __init__(self, alpha=1, fit_intercept=False,
-#                  random_state=None, max_iter=10000):
-#         super().__init__(alpha, fit_intercept, random_state, max_iter)
-#
-#     def set_lambda(self, new_lambda):
-#         self.alpha = new_lambda
