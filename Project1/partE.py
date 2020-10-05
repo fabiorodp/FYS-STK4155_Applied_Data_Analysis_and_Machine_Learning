@@ -47,6 +47,7 @@ for idx, i in enumerate(lambda_):
 sns.heatmap(data=coeffs, xticklabels=lambda_, annot=True)
 plt.xlabel("Lambdas")
 plt.ylabel("Betas")
+plt.title("Behavior of betas as lambda increases")
 plt.show()
 
 # ################################################### GridSearch:
@@ -113,4 +114,6 @@ sns.heatmap(data=kf_avg, xticklabels=poly_degrees,
             yticklabels=k, annot=True)
 plt.xlabel("Polynomial degrees")
 plt.ylabel("k-folds")
+plt.title("Behavior of k-folds' MSE-scores as polynomial "
+          "degree increases")
 plt.show()
