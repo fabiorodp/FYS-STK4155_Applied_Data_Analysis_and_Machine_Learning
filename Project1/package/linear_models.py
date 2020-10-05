@@ -12,7 +12,6 @@ from sklearn.linear_model import Lasso
 class OLS:
 
     def __init__(self, random_state=None):
-
         if random_state is not None:
             np.random.seed(random_state)
 
@@ -66,10 +65,22 @@ class Ridge(OLS):
         self.lambda_ = new_lambda
 
 
-class LassoModel(Lasso):
+class LassoModel(Ridge):
+    def __init__(self, lambda_=1, random_state=None):
+        super().__init__(random_state)
+        self.lambda_ = lambda_
 
-    def __init__(self, alpha=1, fit_intercept=False, random_state=None):
-        super().__init__(alpha, fit_intercept, random_state)
+    def fit(self, X, z):
+        lr = Lasso(alpha=self.lambda_, fit_intercept=False,
+                   max_iter=10000, random_state=self.random_state)
+        lr.fit(X, z)
+        self.coef_ = lr.coef_
 
-    def set_lambda(self, new_lambda):
-        self.alpha = new_lambda
+# class LassoModel(Lasso):
+#
+#     def __init__(self, alpha=1, fit_intercept=False,
+#                  random_state=None, max_iter=10000):
+#         super().__init__(alpha, fit_intercept, random_state, max_iter)
+#
+#     def set_lambda(self, new_lambda):
+#         self.alpha = new_lambda
