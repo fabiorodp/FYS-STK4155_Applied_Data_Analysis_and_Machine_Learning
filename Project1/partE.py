@@ -12,11 +12,42 @@ from package.linear_models import LassoModel
 from package.studies import GridSearch
 from package.studies import BiasVarianceTradeOff
 from package.studies import CrossValidationKFolds
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 
 nr_samples = 20
 poly_degrees = np.arange(2, 12)
-lambda_ = [0, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 0.5, 1]
+lambda_ = [0, 10**-5, 10**-4, 10**-3, 10**-2, 0.5, 1]
+
+# ###################################### LR-coefficients study:
+coeffs = np.zeros(shape=(21, len(lambda_)))
+
+cd = CreateData(random_state=10)
+X, z = cd.fit(nr_samples=20, degree=5)
+
+X_train, X_test, z_train, z_test = \
+    train_test_split(
+        X, z, test_size=0.2, random_state=10)
+
+scaler = StandardScaler(with_mean=False,
+                        with_std=True)
+scaler.fit(X_train)
+X_test = scaler.transform(X_test)
+X_train = scaler.transform(X_train)
+
+lr = LassoModel(random_state=10)
+
+for idx, i in enumerate(lambda_):
+    print(i)
+    lr.set_lambda(new_lambda=i)
+    lr.fit(X_train, z_train)
+    coeffs[:, idx] = lr.coef_.ravel()
+
+sns.heatmap(data=coeffs, xticklabels=lambda_, annot=True)
+plt.xlabel("Lambdas")
+plt.ylabel("Betas")
+plt.show()
 
 # ################################################### GridSearch:
 gs = GridSearch(data=CreateData, model=LassoModel,
