@@ -14,39 +14,25 @@ from package.studies import BiasVarianceTradeOff
 from package.studies import CrossValidationKFolds
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 from imageio import imread
 from sklearn.linear_model import LinearRegression
 
+# Load the terrain
+terrain1 = imread('data/SRTM_data_Norway_1.tif')
+# Show the terrain
+plt.figure()
+plt.title('Terrain over Norway 1')
+plt.imshow(terrain1, cmap='gray')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
 
-cd = CreateData(random_state=10)
-X, z = cd.fit(
-    nr_samples=900, degree=5,
-    terrain_file="data/SRTM_data_Norway_2.tif",
-    plot=True)
-
-X_train, X_test, z_train, z_test = \
-    train_test_split(
-        X, z, test_size=0.2, random_state=10)
-
-scaler = StandardScaler(with_mean=False, with_std=True)
-scaler.fit(X_train)
-X_test = scaler.transform(X_test)
-X_train = scaler.transform(X_train)
-
-lr = OLS(random_state=10)
-lr.fit(X_train, z_train)
-
-z_hat = lr.predict(X_train)
-z_tilde = lr.predict(X_test)
-
-print(mean_squared_error(z_train, z_hat))
-print(mean_squared_error(z_test, z_tilde))
-
+# ########################################################## OLS:
+# ############### Extracting a smaller region for our study:
 # ########################################### GridSearch:
-
-nr_samples = np.arange(5, 50, 5)
-poly_degrees = np.arange(2, 10)
+nr_samples = np.arange(15, 50, 5)
+poly_degrees = np.arange(2, 12)
 
 # calling GridSearch
 gs = GridSearch(data=CreateData, model=OLS, random_state=10)
@@ -60,22 +46,66 @@ mse_train, mse_test, r2_train, r2_test = \
            plot_results=True, print_results=True)
 
 # plotting result for nr_samples=20 and poly_degrees from 2 to 9
-plt.plot(poly_degrees[:-1], mse_train[2, :-1], "--", label='MSE Train')
-plt.plot(poly_degrees[:-1], mse_test[2, :-1], label='MSE Test')
+plt.plot(poly_degrees, mse_train[0, :], "--", label='MSE Train')
+plt.plot(poly_degrees, mse_test[0, :], label='MSE Test')
 plt.xlabel("Complexity: Polynomial degrees")
 plt.ylabel("MSE scores")
-plt.title("MSE train and MSE test, with nr_sample=12, for "
+plt.title("MSE train and MSE test, with nr_sample=15, for "
           "different poly_degrees")
 plt.legend()
 plt.show()
 
-# plotting bias-variance trade-off
+# ########################### plotting bias-variance trade-off:
 ff = BiasVarianceTradeOff(data=CreateData, model=OLS,
                           random_state=10)
 
 error, bias, variance = \
-    ff.run(nr_samples=8, poly_degrees=poly_degrees,
+    ff.run(nr_samples=15, poly_degrees=poly_degrees,
            lambda_=None, n_boostraps=100, test_size=0.2,
            scale=True,
            terrain="data/SRTM_data_Norway_1.tif",
            verboose=True, plot=True)
+
+# #################################### k-folds cross-validation:
+k = np.arange(5, 11)
+kf_avg = []
+
+for i in k:
+    kf_cv = CrossValidationKFolds(data=CreateData, model=OLS,
+                                  random_state=10)
+
+    kf_avg.append(kf_cv.run(
+        nr_samples=15, poly_degrees=poly_degrees,
+        terrain="data/SRTM_data_Norway_1.tif",
+        k=i, shuffle=True, plot=False))
+
+# ######################## printing testing MSE for each k-fold:
+print("Testing MSE for our k-folds CV: ", kf_avg)
+
+# ############################## plotting lines for each k-fold:
+signs = ["-", "--", "-.", "x", "+", "|"]
+labels = ["5-fold Testing MSE", "6-fold Testing MSE",
+          "7-fold Testing MSE", "8-fold Testing MSE",
+          "9-fold Testing MSE", "10-fold Testing MSE"]
+
+for e, sign, label in zip(kf_avg, signs, labels):
+    plt.plot(poly_degrees, e, sign, label=label)
+
+plt.ylabel("Training MSE")
+plt.xlabel("Complexity: Polynomial degrees")
+plt.title("Our {}-folds cross-validation".format(k))
+plt.legend()
+plt.show()
+
+
+# heat-map with poly_degrees x k-folds testing MSE results:
+sns.heatmap(data=kf_avg, xticklabels=poly_degrees,
+            yticklabels=k, annot=True)
+plt.xlabel("Polynomial degrees")
+plt.ylabel("k-folds")
+plt.title("Behavior of k-folds' MSE-scores as polynomial "
+          "degree increases")
+plt.show()
+
+# ########################################################## Ridge:
+
