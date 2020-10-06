@@ -71,7 +71,7 @@ class CreateData:
                 terrain = imread(terrain_file)
 
             # setting a region of the terrain dataset
-            terrain = terrain[:nr_samples, :nr_samples]/1000  # converting in km
+            terrain = terrain[:nr_samples, :nr_samples]
 
             # creating mesh of image pixels
             x = np.linspace(0, 1, np.shape(terrain)[0])

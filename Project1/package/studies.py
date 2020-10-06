@@ -323,14 +323,15 @@ class CrossValidationKFolds:
         self.random_state = random_state
         np.random.seed(self.random_state)
 
-    def run(self, nr_samples, poly_degrees, k, lambda_=None,
-            shuffle=True, plot=False):
+    def run(self, nr_samples, poly_degrees, terrain=None,
+            k=5, lambda_=None, shuffle=True, plot=False):
 
         avg_mse = []
         for degree in poly_degrees:
 
             # generating data-sets
-            X, z = self.data.fit(nr_samples=nr_samples, degree=degree)
+            X, z = self.data.fit(nr_samples=nr_samples, degree=degree,
+                                 terrain_file=terrain)
 
             # scaling
             scaler = StandardScaler(with_mean=False, with_std=True)
