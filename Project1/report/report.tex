@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{import}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\graphicspath{ {./pictures/} }
+
+\usepackage{makeidx}
+\makeindex
+
+\title{UiO - FYS-STK4155: PROJECT 1: REGRESSION ANALYSIS ON FRANKE'S  FUNCTION AND DIGITAL TERRAIN DATA}
+\author{\textbf{Fábio Rodrigues Pereira} \\ \small fabior@uio.no - github: @fabiorod}
+\date{October 2020}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+\noindent This project will study engaging linear regression analysis models, specifically Ordinary least squares, Ridge and Lasso. Explanatory random variables transformed in polynomials with different degrees will feed those models. Likewise, two different data types will be performed as response variables, one created by the Franke's function holding heights of a surface, and another by a GeoTIF picture containing the altitudes of a region near Stavanger in Norway. The models aim to learn from the input explanatory variables and predict the output response heights based on complexities, for example, the number of samples or polynomial degrees. We will also practice model selection methods to estimate these predictions' accuracies and choose the best model. For that, the mean square error and the coefficient of determination (R2-score) will play an essential role in assessing these predictions. Furthermore, machine learning pre-processing techniques, such as splitting, scaling, bootstrapping, and k-folds cross-validation, will be applied on different occasions for avoiding outliers, under and over-fittings. As long as the complexities increase, the models tend to over-fit, harming the performance or giving an over-estimated value. The analysis of the regularization present in Ridge and Lasso models will contribute to defeating this issue. Besides, the decomposition of the bias-variance trade-offs with bootstrapping will be crucial to understand the metrics' behavior under an increasing complexity of the data. Therefore, it will end up in an approximated view over a possible under- or over-estimation and will contribute to improving our forecasts.
+\end{abstract}
+
+\clearpage
+\thispagestyle{empty}
+
+\tableofcontents
+
+\clearpage
+\thispagestyle{empty}
+
+\import{./}{introduction.tex}
+
+\import{./}{theory.tex}
+
+\import{./}{discussion_with_results.tex}
+
+\import{./}{conclusion.tex}
+
+\import{./}{bibliography.tex}
+
+\end{document}
