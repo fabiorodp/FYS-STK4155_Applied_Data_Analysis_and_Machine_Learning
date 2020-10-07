@@ -42,7 +42,7 @@ mse_train, mse_test, r2_train, r2_test = \
            terrain="data/SRTM_data_Norway_1.tif",
            plot_results=True, print_results=True)
 
-# plotting result for nr_samples=20 and poly_degrees from 2 to 9
+# plotting result for nr_samples=15 and poly_degrees from 2 to 9
 plt.plot(poly_degrees, mse_train[0, :], "--", label='MSE Train')
 plt.plot(poly_degrees, mse_test[0, :], label='MSE Test')
 plt.xlabel("Complexity: Polynomial degrees")
@@ -119,9 +119,9 @@ mse_train, mse_test, r2_train, r2_test = \
            terrain="data/SRTM_data_Norway_1.tif",
            plot_results=True, print_results=True)
 
-# plotting result for nr_samples=20 and poly_degrees from 2 to 12:
-plt.plot(poly_degrees, mse_train[1, :], "--", label='MSE Train')
-plt.plot(poly_degrees, mse_test[1, :], label='MSE Test')
+# plotting result for nr_samples=15 and poly_degrees from 2 to 12:
+plt.plot(poly_degrees, mse_train[2, :], "--", label='MSE Train')
+plt.plot(poly_degrees, mse_test[2, :], label='MSE Test')
 plt.xlabel("Complexity: Polynomial degrees")
 plt.ylabel("MSE scores")
 plt.title("MSE train and MSE test metrics.")
@@ -134,7 +134,7 @@ ff = BiasVarianceTradeOff(data=CreateData, model=Ridge,
 
 error, bias, variance = \
     ff.run(nr_samples=15, poly_degrees=poly_degrees,
-           lambda_=0.001, n_boostraps=100, test_size=0.2,
+           lambda_=0.0001, n_boostraps=100, test_size=0.2,
            scale=True, terrain="data/SRTM_data_Norway_1.tif",
            verboose=True, plot=True)
 
@@ -147,7 +147,7 @@ for i in k:
                                   random_state=10)
 
     kf_avg.append(kf_cv.run(
-        nr_samples=15, poly_degrees=poly_degrees, lambda_=0.001,
+        nr_samples=15, poly_degrees=poly_degrees, lambda_=0.0001,
         terrain="data/SRTM_data_Norway_1.tif", k=i, shuffle=True,
         plot=False))
 
@@ -193,9 +193,9 @@ mse_train, mse_test, r2_train, r2_test = \
            terrain="data/SRTM_data_Norway_1.tif",
            plot_results=True, print_results=True)
 
-# plotting result for nr_samples=20 and poly_degrees from 2 to 12:
-plt.plot(poly_degrees, mse_train[1, :], "--", label='MSE Train')
-plt.plot(poly_degrees, mse_test[1, :], label='MSE Test')
+# plotting result for nr_samples=15 and poly_degrees from 2 to 12:
+plt.plot(poly_degrees, mse_train[2, :], "--", label='MSE Train')
+plt.plot(poly_degrees, mse_test[2, :], label='MSE Test')
 plt.xlabel("Complexity: Polynomial degrees")
 plt.ylabel("MSE scores")
 plt.title("MSE train and MSE test metrics.")
@@ -208,7 +208,7 @@ ff = BiasVarianceTradeOff(data=CreateData, model=LassoModel,
 
 error, bias, variance = \
     ff.run(nr_samples=15, poly_degrees=poly_degrees,
-           lambda_=0.001, n_boostraps=100, test_size=0.2,
+           lambda_=0.0001, n_boostraps=100, test_size=0.2,
            scale=True, terrain="data/SRTM_data_Norway_1.tif",
            verboose=True, plot=True)
 
@@ -222,7 +222,7 @@ for i in k:
                                   random_state=10)
 
     kf_avg.append(kf_cv.run(
-        nr_samples=15, poly_degrees=poly_degrees, lambda_=0.001,
+        nr_samples=15, poly_degrees=poly_degrees, lambda_=0.0001,
         terrain="data/SRTM_data_Norway_1.tif", k=i, shuffle=True,
         plot=False))
 
