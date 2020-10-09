@@ -1,9 +1,34 @@
 \section{Introduction}
+\label{chap:Introduction}
 
-\quad \, Linear regression analysis performs a significant purpose in statistical modelling and is broadly applied nowadays. This technique is a linear approach to modelling the relationship between a response or dependent variable and explanatory or independent variables. In the case of only one explanatory variable, this is called a single linear regression, and for more than 2, we have a denominated multiple linear regression.\\
+\quad \, A sub-field of artificial intelligence (AI) called Machine Learning (ML) plays an essential role in uncountable fields nowadays. Its goals are generally to understand structured data that fits a model and predicts useful outcomes for humanity. Although machine learning is a computer science field, it has different approaches as regular programming. Typically, traditional programming only gives explicit instructions to a computer for calculating or solving problems. Machine Learning algorithms go beyond; they allow a computer to train and learn from input data and use statistical analysis to predict outputs. Due to that, computers now build models from sample data to automate decision-making processes.\\
 
-These relationships between variables are modelled using linear predictor functions, in other words, combinations of a set of unknown coefficients and known explanatory variables resulting in the response variables. Once we have a bunch of data observations, this is easy to infer the unknown coefficients from the techniques, and then we will end up with a model which can predict a response from any explanatory data.\\
+Nevertheless, these ML models need to be studied and perfected by professionals and researchers. Our job here is to develop, analyze, and investigate different generalized techniques applied in as many different real domains as imaginable, with as much accuracy as possible. This duty is the motivation of our scientific report, which will explore the subject of Linear Regression analysis and see how this method can be enhanced by assessing more reliable results.\\
 
-The following topics of this dissertation will cover these techniques behind the linear regression, for instance, ordinary least squares, singular-value decomposition (SVD) and Ridge and Lasso regressions. Also, we will discuss how to access the model's accuracy by using r2 score, mean squared error and confidence interval of the regression's coefficients. Besides, we will additionally present the relevant machine learning topics, essentially cross-validation, re-sampling and scaling techniques.\\
+For that, this report will first investigate a vanilla data-set so-called Franke's function [\ref{chap:Creating data-set from random sets}], and after a GeoTIF image of an area near Stavanger in Norway [\ref{chap:Part F and G of the study}]. This Franke's function and GeoTIF image data are further denoted as z response variables and are known to generate surface heights, which polynomials can explain. Then, we generate two different sets of random explanatory variables, x and y, that will be subject to different degrees' polynomial transformation [\ref{chap:Creating data-set from random sets}]. Accordingly, these sets will feed three different linear regression models, Ordinary least square, Ridge, and Lasso regression. We will examine the prediction accuracy results of their heights as a function of the explanatory polynomials. Next, these regression models will be adjusted according to each peculiarities, such as their regularization, step by step in the discussion section. The study will also perform 100x bootstrapping to visualize the bias-variance trade-off and its under or over-fitting zones. Finally, it will be essential to apply the k-folds cross-validation technique and reflect on potential improvement assessments.\\
 
-Finally, after the consolidation of the theory, we will address and evaluate a specific real case of digital terrain data and apply the subjects studied.\\
+It is important to say that almost all algorithms utilized in this report are self-made and available for inspection on our GitHub repository \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/}{here}. For that, it was created a package directory with a collection of python's code, as follows:\\
+
+-- \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/accuracies.py}{accuracies.py}: Containing the metrics utilized in the study, as mean-squared-error and r2-score.\\
+
+-- \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/create_dataset.py}{create\_dataset.py}: Containing the classes utilized to create the explanatory and response variables, and the design matrix.\\
+
+-- \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/linear_models.py}{linear\_models.py}: Containing the linear regression models, for instance, OLS, Ridge, and Lasso.\\
+
+-- \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/studies.py}{studies.py}: Containing the studies performed, for example, GridSearch, Bias-variance trade-off, and k-folds cross-validation.\\
+
+The following topics of this dissertation will cover these methods under the linear regression models. First, this report will approach the theories [\ref{chap:Theory}] utilized in the discussion section [\ref{chap:Discussion}]. After, it will divide the discussion and result topics into different subsections, each one dealing with a different subject and with a separate python test file in our GitHub repository, such that:\\
+
+-- Part A [\ref{chap:Part A of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partA.py}{partA.py}. Initial experiments of the design matrix, Franke's function, OLS regression, the confidence interval for the coefficients of the regression and metrics;\\
+
+-- Part B [\ref{chap:Part B of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partB.py}{partB.py}. GridSearch and Bias-variance trade-off with bootstrapping under Franke's function and OLS model;\\
+
+-- Part C [\ref{chap:Part C of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partC.py}{partC.py}. K-folds cross-validation under Franke's function and OLS model;\\
+
+-- Part D [\ref{chap:Part D of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partD.py}{partD.py}. GridSearch, bias-variance trade-off with bootstrapping, and k-folds cross-validation under Franke's function and Ridge model;\\
+
+-- Part E [\ref{chap:Part E of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partE.py}{partE.py}. GridSearch, bias-variance trade-off with bootstrapping, and k-folds cross-validation under Franke's function and Lasso model;\\
+
+-- Part F and G [\ref{chap:Part F and G of the study}]: File \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/partFandG.py}{partFandG.py}. GridSearch, bias-variance trade-off, and k-folds cross-validation for GeoTIF image data under OLS, Ridge, and Lasso models. Additionally, the analysis of Gridsearch, bias-variance trade-off with bootstrapping, and k-folds cross-validation for each model.\\
+
+In the end, a conclusion [\ref{chap:Conclusion}] will discuss the pros and cons of the methods and possible improvements and perspectives for future work.\\
