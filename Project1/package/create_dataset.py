@@ -12,13 +12,30 @@ import matplotlib.pyplot as plt
 
 
 class CreateData:
+    """Class to generate the desing matrix X and response
+    variable z from Franke's function and GeoTIF terrain file."""
 
     def __init__(self, random_state=None):
+        """"
+        Constructor of the class.
+
+        :param random_state: int: Seed for the experiment.
+        """
         self.random_state = random_state
 
     def fit(self, nr_samples, degree=None, terrain_file=None,
             plot=False):
+        """"
+        Fitting parameters to generate data-sets.
 
+        :param nr_samples: int: Number of the sample space.
+        :param degree: int: Degree of the polynomial transformation.
+        :param terrain_file: Path of the GeoTIF file.
+        :param plot: bool: True for plotting the surface.
+
+        :return X: ndarray: Design matrix.
+        :return z: ndarray: response variables.
+        """
         if terrain_file is None:
 
             if degree is None:
@@ -120,6 +137,13 @@ class CreateData:
 
     @staticmethod
     def _franke_function(x, y):
+        """Calculations for Franke's function.
+
+        :param x: ndarray with x variables.
+        :param y: ndarray with y variables.
+
+        :return ndarray with the results.
+        """
         term1 = 0.75 * np.exp(-(0.25 * (9 * x - 2) ** 2) - 0.25 * ((9 * y - 2) ** 2))
         term2 = 0.75 * np.exp(-((9 * x + 1) ** 2) / 49.0 - 0.1 * (9 * y + 1))
         term3 = 0.5 * np.exp(-(9 * x - 7) ** 2 / 4.0 - 0.25 * ((9 * y - 3) ** 2))
@@ -128,6 +152,7 @@ class CreateData:
 
     @staticmethod
     def _plot(x, y, z):
+        """Plotting the surface."""
         fig = plt.figure()
         ax = plt.axes(projection="3d")
         ax.scatter3D(x, y, z)

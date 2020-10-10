@@ -10,8 +10,15 @@ from sklearn.linear_model import Lasso
 
 
 class OLS:
+    """Ordinary least squares model for
+    fitting and predicting."""
 
     def __init__(self, random_state=None):
+        """"
+        Constructor for the class.
+
+        :param random_state: int: Seed for the experiment.
+        """
         if random_state is not None:
             np.random.seed(random_state)
 
@@ -22,6 +29,12 @@ class OLS:
         self.z_var = None
 
     def fit(self, X, z):
+        """"
+        Fitting parameters to regression model.
+
+        :param X: ndarray with the design matrix.
+        :param z: ndarray with the response variables.
+        """
         self.coef_ = np.linalg.pinv(X.T @ X) @ X.T @ z
         self.coef_var = np.linalg.pinv(X.T @ X)
         self.z_var = np.var(z)
@@ -51,26 +64,57 @@ class OLS:
 
 
 class Ridge(OLS):
+    """Ridge regression model for fitting and predicting."""
 
     def __init__(self, lambda_=1, random_state=None):
+        """"
+        Constructor for the class.
+
+        :param lambda: float: Regularization value of the model.
+        :param random_state: int: Seed for the experiment.
+        """
         super().__init__(random_state)
         self.lambda_ = lambda_
 
     def fit(self, X, z):
+        """"
+        Fitting parameters to regression model.
+
+        :param X: ndarray with the design matrix.
+        :param z: ndarray with the response variables.
+        """
         p = np.shape(X)[1]
         I = np.identity(p) * self.lambda_
         self.coef_ = np.linalg.pinv((X.T @ X) + I) @ X.T @ z
 
     def set_lambda(self, new_lambda):
+        """
+        Changing lambda regularization value.
+
+        :param new_lambda: float: New lambda value.
+        """
         self.lambda_ = new_lambda
 
 
 class LassoModel(Ridge):
+    """Lasso regression model for fitting and predicting."""
     def __init__(self, lambda_=1, random_state=None):
+        """"
+        Constructor for the class.
+
+        :param lambda: float: Regularization value of the model.
+        :param random_state: int: Seed for the experiment.
+        """
         super().__init__(random_state)
         self.lambda_ = lambda_
 
     def fit(self, X, z):
+        """"
+        Fitting parameters to regression model.
+
+        :param X: ndarray with the design matrix.
+        :param z: ndarray with the response variables.
+        """
         lr = Lasso(alpha=self.lambda_, fit_intercept=False,
                    random_state=self.random_state)
         lr.fit(X, z)

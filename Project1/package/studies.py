@@ -20,6 +20,13 @@ class GridSearch:
     poly_degrees or lambdas."""
 
     def __init__(self, data, model, random_state=None):
+        """"
+        Constructor for the class.
+
+        :param data: class: Data-set generator.
+        :param model: class: Regression model.
+        :param random_state: int: Seed for the experiment.
+        """
         self.data = data(random_state=random_state)
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
@@ -27,6 +34,22 @@ class GridSearch:
     def run(self, nr_samples, poly_degrees, lambda_=None,
             test_size=0.2, scale=True, terrain=None,
             plot_results=False, print_results=False):
+        """
+        Run the experiment to search the best parameters.
+
+        :param nr_samples: int or ndarray: Sample space.
+        :param poly_degrees: int or ndarray: Polynomial degree.
+        :param lambda_: float or ndarrau: Regularization value.
+        :param test_size: flaot: percentage of the test space.
+        :param scale: bool: True to scale the data.
+        :param terrain: string: Path for the GeoTIF file.
+        :param plot_results: bool: True to plot results.
+        :param print_results: bool: True to print results.
+
+        :return: ndarrays for training MSE (mse_train),
+                 testing MSE (mse_test), training r2-score (r2_train),
+                 testing r2_score (r2_test)
+        """
 
         if lambda_ is not None:
             mse_train = np.zeros(shape=(len(lambda_), len(poly_degrees)))
@@ -136,7 +159,7 @@ class GridSearch:
             return mse_train, mse_test, r2_train, r2_test
 
     def _split_scale(self, X, z, scale, test_size):
-
+        """Split and scale data."""
         X_train, X_test, z_train, z_test = \
             None, None, None, None
 
@@ -211,6 +234,13 @@ class BiasVarianceTradeOff:
     """Class to decompose the bias-variance trade-off."""
 
     def __init__(self, data, model, random_state=None):
+        """"
+        Constructor for the class.
+
+        :param data: class: Data-set generator.
+        :param model: class: Regression model.
+        :param random_state: int: Seed for the experiment.
+        """
         self.data = data(random_state=random_state)
         self.ML_model = model(random_state=random_state)
         self.random_state = random_state
@@ -218,7 +248,22 @@ class BiasVarianceTradeOff:
     def run(self, nr_samples, poly_degrees, lambda_=None,
             n_boostraps=100, test_size=0.2, scale=True,
             terrain=None, verboose=False, plot=False):
+        """
+        Run the experiment to visualize bias-variance trade-offs.
 
+        :param nr_samples: int or ndarray: Sample space.
+        :param poly_degrees: int or ndarray: Polynomial degree.
+        :param n_boostraps: int: Number of bootstrapping.
+        :param lambda_: float or ndarrau: Regularization value.
+        :param test_size: flaot: percentage of the test space.
+        :param scale: bool: True to scale the data.
+        :param terrain: string: Path for the GeoTIF file.
+        :param verboose: bool: True to print steps in the console.
+        :param plot_results: bool: True to plot results.
+        :param print_results: bool: True to print results.
+
+        :return: ndarrays for error, bias, variance.
+        """
         error = np.zeros(shape=len(poly_degrees))
         bias = np.zeros(shape=len(poly_degrees))
         variance = np.zeros(shape=len(poly_degrees))
@@ -266,7 +311,6 @@ class BiasVarianceTradeOff:
         return error, bias, variance
 
     def _split_scale(self, X, z, scale, test_size):
-
         X_train, X_test, z_train, z_test = \
             None, None, None, None
 
@@ -325,7 +369,19 @@ class CrossValidationKFolds:
 
     def run(self, nr_samples, poly_degrees, terrain=None,
             k=5, lambda_=None, shuffle=True, plot=False):
+        """
+        Run the experiment to visualize k-folds cross-validation.
 
+        :param nr_samples: int or ndarray: Sample space.
+        :param poly_degrees: int or ndarray: Polynomial degree.
+        :param k: int: Number of folds.
+        :param lambda_: float or ndarrau: Regularization value.
+        :param shuffle: bool: True to shuffle folds.
+        :param terrain: string: Path for the GeoTIF file.
+        :param plot: bool: True to plot the lines.
+
+        :return: ndarray with the average of testing MSE.
+        """
         avg_mse = []
         for degree in poly_degrees:
 
