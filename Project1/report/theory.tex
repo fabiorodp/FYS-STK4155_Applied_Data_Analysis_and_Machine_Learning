@@ -215,28 +215,19 @@ $$C(\boldsymbol{X},\boldsymbol{\beta}) =\frac{1}{n}\sum_{i=0}^{n-1}(z_i-\tilde{z
 
 From this, one can prove the bias-variance relationship: \\
 
-$E[(\boldsymbol{z} - \boldsymbol{\tilde{z}})]^{2} = E[(f + \epsilon - \boldsymbol{\tilde{z}})]^{2} = E[(f + \epsilon - \boldsymbol{\tilde{z}} + E[\boldsymbol{\tilde{z}}] - E[\boldsymbol{\tilde{z}}])^{2}]$ \\
-
-$= E[(f - E[\boldsymbol{\tilde{z}}]^{2})] + E[\epsilon^{2}] + E[E[(\boldsymbol{\tilde{z}} - \boldsymbol{\tilde{z}})^{2}] + 
-2E[(f - E[\boldsymbol{\tilde{z}}] \epsilon)] + 2E[\epsilon(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})]$ \\
-
-$+ 2E[(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})(f-E[\boldsymbol{\tilde{z}}])] = (f - E[\boldsymbol{\tilde{z}}])^{2} + E[\epsilon^{2}] + E[(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})^{2}]$ \\
-
-$+ 2(f-E[\boldsymbol{\tilde{z}}])E[\epsilon] + 2E[\epsilon]E[E[\boldsymbol{\tilde{z}}]-\boldsymbol{\tilde{z}}] + 2E[E[\boldsymbol{\tilde{z}}]-\boldsymbol{\tilde{z}}](f-E[\boldsymbol{\tilde{z}}])$ \\
-
-$= (f-E[\boldsymbol{\tilde{z}}]^{2} + E[\epsilon^{2}]+E[(E[\boldsymbol{\tilde{z}}]-\boldsymbol{\tilde{z}})^{2}] = (f-E[\boldsymbol{\tilde{z}}])^{2}+\sigma^{2}+Var[\boldsymbol{\tilde{z}}]$ \\
-
-\begin{equation}
+\begin{align*}
 \label{bias-variance-decomposition}
-Hence, E[(\boldsymbol{z} - \boldsymbol{\tilde{z}})]^{2} = Bias(\boldsymbol{\tilde{z}})^{2} + \sigma^{2} + Var(\boldsymbol{\tilde{z}})
-\end{equation} \\
+E[(\boldsymbol{z} - \boldsymbol{\tilde{z}})]^{2} &= E[(f + \epsilon - \boldsymbol{\tilde{z}})]^{2}\\ &= E[(f + \epsilon - \boldsymbol{\tilde{z}} + E[\boldsymbol{\tilde{z}}] - E[\boldsymbol{\tilde{z}}])^{2}]\\ &= E[(f - E[\boldsymbol{\tilde{z}}]^{2})] + E[\epsilon^{2}] + E[E[(\boldsymbol{\tilde{z}} - \boldsymbol{\tilde{z}})^{2}] + 2E[(f - E[\boldsymbol{\tilde{z}}] \epsilon)]\\ &+ 2E[\epsilon(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})] + 2E[(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})(f-E[\boldsymbol{\tilde{z}}])]\\ &= (f - E[\boldsymbol{\tilde{z}}])^{2} + E[\epsilon^{2}] + E[(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})^{2}]\\ &+ 2(f-E[\boldsymbol{\tilde{z}}])E[\epsilon] + 2E[\epsilon]E[E[\boldsymbol{\tilde{z}}]-\boldsymbol{\tilde{z}}] + 2E[E[\boldsymbol{\tilde{z}}]-\boldsymbol{\tilde{z}}](f-E[\boldsymbol{\tilde{z}}])\\ &= (f-E[\boldsymbol{\tilde{z}}]^{2} + E[\epsilon^{2}] + E[(E[\boldsymbol{\tilde{z}}] - \boldsymbol{\tilde{z}})^{2}]\\ &= (f-E[\boldsymbol{\tilde{z}}])^{2} + \sigma^{2} + Var[\boldsymbol{\tilde{z}}]\\ &= Bias(\boldsymbol{\tilde{z}})^{2} + \sigma^{2} + Var(\boldsymbol{\tilde{z}})
+\end{align*}\\
 
 \noindent where, \\
 
-$Var(\textbf{z}) = E[(\boldsymbol{\tilde{z}}-E[\boldsymbol{\tilde{z}}])^{2}] = E[(\textbf{y}-f)^{2}] = E[(f+\epsilon-f)^{2}]=E[\epsilon^{2}]$ \\
-
-$=Var[\epsilon]+E[\epsilon]^{2} = \sigma^{2}$ \\
+\begin{align*}
+Var(\textbf{z}) &= E[(\boldsymbol{\tilde{z}} - E[\boldsymbol{\tilde{z}}])^{2}]\\ &= E[(\textbf{y}-f)^{2}]\\ &= E[(f + \epsilon - f)^{2}]\\ &= E[\epsilon^{2}]\\ &= Var[\epsilon] + E[\epsilon]^{2}\\ &= \sigma^{2}
+\end{align*}
 
 \noindent and, \\
 
-$Bias(\boldsymbol{\tilde{z}}) = E[\boldsymbol{\tilde{z}}-f]=E[\boldsymbol{\tilde{z}}]-f $ \\
+\begin{align*}
+Bias(\boldsymbol{\tilde{z}}) &= E[\boldsymbol{\tilde{z}} - f]\\ &= E[\boldsymbol{\tilde{z}}] - f
+\end{align*}

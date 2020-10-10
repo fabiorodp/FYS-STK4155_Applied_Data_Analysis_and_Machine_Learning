@@ -17,12 +17,10 @@ First, \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/p
 
 \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/Create_data.py}{\_franke\_function(x, y)}: This takes two parameters, two sets of explanatory variables/observations, and returns the following calculation as a column vector z of shape (N, 1):\\
 
-\begin{equation}
 \label{frankefunction}
-f(x,y) &= \frac{3}{4}\exp{\left(-\frac{(9x-2)^2}{4} - \frac{(9y-2)^2}{4}\right)}+\frac{3}{4}\exp{\left(-\frac{(9x+1)^2}{49}- \frac{(9y+1)}{10}\right)}+
-
-\>\>\>\-\- \frac{1}{2}\exp{\left(-\frac{(9x-7)^2}{4} - \frac{(9y-3)^2}{4}\right)} -\frac{1}{5}\exp{\left(-(9x-4)^2 - (9y-7)^2\right) }.
-\end{equation}\\
+\begin{align*}
+f(x, y) &= \frac{3}{4}\exp{\left(-\frac{(9x-2)^2}{4} - \frac{(9y-2)^2}{4}\right)} + \frac{3}{4}\exp{\left( - \frac{(9x+1)^2}{49} - \frac{(9y+1)}{10}\right)}\\ &+ \frac{1}{2}\exp{\left( - \frac{(9x-7)^2}{4} - \frac{(9y-3)^2}{4}\right)} - \frac{1}{5}\exp{\left( - (9x-4)^2 - (9y - 7)^2\right)}.
+\end{align*}
 
 \href{https://github.com/fabiorodp/UiO-FYS-STK4155/blob/master/Project1/package/Create_data.py}{\_plot(x, y, z)}:  Returns a 3d plot from the flattened sets x, y, z.\\
 
@@ -30,12 +28,12 @@ Fitting the two sets x and y, of n random numbers between 0 and 1, in the \href{
 
 However, since the set x, y, z will return a well-defined surface in the 3D universe [left of Fig.1], which will not proffer any challenge for our Linear Regression models, we added 15 percent of a standard normally distributed noise to the response z. Then, one can see that a new 3D plot of the surface contains many choppy points around [right of Fig.1], denoting the noise and increasing our predictions' difficulty.\\
 
-\begin{figure}[h]
+\begin{figure}[H]
 \label{fig:surface}
 \centering
 \includegraphics[width=7cm]{surface1}
 \includegraphics[width=7cm]{surfaceplusnoise}
-\caption{Surfaces generated from sets x and y of 100 random numbers in the interval 0, 1, and set z from FrankeFunction [\autoref{frankefunction}]}
+\caption{Surfaces generated from sets x and y of 100 random numbers in the interval 0, 1, and set z from FrankeFunction [\ref{frankefunction}]}
 \end{figure}
 
 \subsubsection{Fitting the OLS model and predicting the targets}
@@ -72,7 +70,7 @@ Finally, we can assess the accuracy measures after predictions.\\
 
 For the training predictions, the outputs show MSE scores between 0.027 and 0.019, and R2-scores between 65 and 75 percent.\\
 
-For the testing predictions, the outputs show MSE scores between 0.69 and 0.35 and R2-score between 65 and 77 percent.\\
+For the testing predictions, the outputs show MSE scores between 0.069 and 0.035 and R2-score between 65 and 77 percent.\\
 
 Thus, the z\_train and z\_test predictions are near the real values. Also, the factors in the design matrix explain the target ($z$) at a rate of approx. 65 to 77 percent. Notice that as the polynomials' complexity increases from 2 to 5 as the r2-score increases and the MSE score decreases, it suggests that we could increase the polynomial degrees to acquire better results.\\
 
