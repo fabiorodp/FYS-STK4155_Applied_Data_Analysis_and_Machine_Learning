@@ -31,12 +31,12 @@ class GridSearch:
                   "MSE values for Testing",
                   "R2-score values for Training",
                   "R2-score values for Testing",
-                  "Time elapsed for training the model"]
+                  "Time elapsed (in sec) for training the model"]
 
         for data, title in zip(datas, titles):
             sns.heatmap(data=data, xticklabels=param1,
                         yticklabels=param2, annot=True,
-                        fmt=".2f")
+                        annot_kws={"size": 8.5}, fmt=".2f")
 
             if params == 'ETASxLAMBDAS':
                 plt.xlabel(f"Learning rate $\eta$ = {param1}")
