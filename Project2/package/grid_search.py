@@ -10,50 +10,61 @@ grid_search.py
 A module to implement Grid Searches.
 """
 
-from sklearn.metrics import mean_squared_error, r2_score
+from Project2.package.accuracies import r2, mse
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from time import time
 
 
 class GridSearch:
-    """Class to find the best parameters for ETAs and LAMBDAs."""
+    """Class to find the best parameters for ETAs as function of
+     Batch-sizes, epochs or lambdas."""
 
     @staticmethod
     def _plot_heatmaps(params, param1, param2, r2_train, mse_train, r2_test,
-                       mse_test):
+                       mse_test, elapsed):
 
-        datas = [mse_train, mse_test, r2_train, r2_test]
+        datas = [mse_train, mse_test, r2_train, r2_test, elapsed]
 
         titles = ["MSE values for Training",
                   "MSE values for Testing",
                   "R2-score values for Training",
-                  "R2-score values for Testing"]
+                  "R2-score values for Testing",
+                  "Time elapsed for training the model"]
 
         for data, title in zip(datas, titles):
             sns.heatmap(data=data, xticklabels=param1,
-                        yticklabels=param2, annot=True)
+                        yticklabels=param2, annot=True,
+                        fmt=".2f")
 
-            if params == 'ETAxLAMBDA':
+            if params == 'ETASxLAMBDAS':
                 plt.xlabel(f"Learning rate $\eta$ = {param1}")
                 plt.ylabel(f"Regularization $\lambda$ = {param2}")
 
-            elif params == 'ETAxEPOCHS':
+            elif params == 'ETASxEPOCHS':
                 plt.xlabel(f"Learning rate $\eta$ = {param1}")
                 plt.ylabel(f"Epochs = {param2}")
+
+            elif params == 'ETASxBATCHES':
+                plt.xlabel(f"Learning rate $\eta$ = {param1}")
+                plt.ylabel(f"Batch sizes = {param2}")
 
             plt.title(title)
             plt.show()
 
     @staticmethod
     def _verbose(params, p1, p2, r2_train_value, mse_train_value,
-                 r2_test_value, mse_test_value):
+                 r2_test_value, mse_test_value, elapsed):
 
-        if params == 'ETAxLAMBDA':
+        if params == 'ETASxLAMBDAS':
             print(f'Eta and Lambda: {p1}, {p2}.')
 
-        elif params == 'ETAxEPOCHS':
+        elif params == 'ETASxEPOCHS':
             print(f'Eta and Epochs: {p1}, {p2}.')
+
+        elif params == 'ETASxBATCHES':
+            print(f'Eta and Batch size: {p1}, {p2}.')
 
         print(f'Training R2 and MSE: '
               f'{r2_train_value}, {mse_train_value}.')
@@ -61,7 +72,9 @@ class GridSearch:
         print(f'Testing R2 and MSE: '
               f'{r2_test_value}, {mse_test_value}.')
 
-    def __init__(self, model, params='ETAxLAMBDA', random_state=None):
+        print(f'Time elapsed for training {elapsed} s.')
+
+    def __init__(self, model, params='ETASxEPOCHS', random_state=None):
         """
         Constructor for the class.
 
@@ -69,56 +82,76 @@ class GridSearch:
         :param params: string: Parameter for the Grid-Search study.
         :param random_state: int: Seed for the experiment.
         """
+
+        if random_state is not None:
+            np.random.seed(random_state)
+
         self.model = model
         self.params = params
         self.random_state = random_state
 
-    def run(self, X_train, X_test, y_train, y_test, lambdas=None,
-            etas=None, epochs=None, plot_results=False, verbose=False):
+    def run(self, X_train, X_test, y_train, y_test, lambdas, etas, epochs,
+            batch_sizes, plot_results=False, verbose=False):
         """
         Run the experiment to search the best parameters.
         """
         param1, param2 = None, None
 
-        if self.params == 'ETAxLAMBDA':
+        if self.params == 'ETASxLAMBDAS':
             param1, param2 = etas, lambdas
 
-        elif self.params == 'ETAxEPOCHS':
+        elif self.params == 'ETASxEPOCHS':
             param1, param2 = etas, epochs
 
-        mse_train = np.zeros(shape=(len(param1), len(param2)))
-        mse_test = np.zeros(shape=(len(param1), len(param2)))
-        r2_train = np.zeros(shape=(len(param1), len(param2)))
-        r2_test = np.zeros(shape=(len(param1), len(param2)))
+        elif self.params == 'ETASxBATCHES':
+            param1, param2 = etas, batch_sizes
 
-        for r_idx, p2 in enumerate(param2):
-            for c_idx, p1 in enumerate(param1):
+        mse_train = np.zeros(shape=(len(param2), len(param1)))
+        mse_test = np.zeros(shape=(len(param2), len(param1)))
+        r2_train = np.zeros(shape=(len(param2), len(param1)))
+        r2_test = np.zeros(shape=(len(param2), len(param1)))
+        elapsed = np.zeros(shape=(len(param2), len(param1)))
+
+        for c_idx, p1 in enumerate(param1):
+            for r_idx, p2 in enumerate(param2):
 
                 # set parameters
-                if self.params == 'ETAxLAMBDA':
+                if self.params == 'ETASxLAMBDAS':
                     self.model.set_lambda(new_lambda=p2)
                     self.model.set_eta(new_eta=p1)
                     self.model.set_epochs(new_epochs=epochs)
+                    self.model.set_batch_size(new_batch_size=batch_sizes)
 
-                elif self.params == 'ETAxEPOCHS':
+                elif self.params == 'ETASxEPOCHS':
                     self.model.set_epochs(new_epochs=p2)
                     self.model.set_eta(new_eta=p1)
                     self.model.set_lambda(new_lambda=lambdas)
+                    self.model.set_batch_size(new_batch_size=batch_sizes)
+
+                elif self.params == 'ETASxBATCHES':
+                    self.model.set_epochs(new_epochs=epochs)
+                    self.model.set_eta(new_eta=p1)
+                    self.model.set_lambda(new_lambda=lambdas)
+                    self.model.set_batch_size(new_batch_size=p2)
 
                 # train model
+                time0 = time()
                 self.model.fit(X_train, y_train)
+                time1 = time()
+                elapsed_value = time1 - time0
+                elapsed[r_idx, c_idx] = elapsed_value
 
                 # assess model
                 y_hat = self.model.predict(X_train)
-                r2_train_value = r2_score(y_train, y_hat)
+                r2_train_value = r2(y_train, y_hat)
                 r2_train[r_idx, c_idx] = r2_train_value
-                mse_train_value = mean_squared_error(y_train, y_hat)
+                mse_train_value = mse(y_train, y_hat)
                 mse_train[r_idx, c_idx] = mse_train_value
 
                 y_tilde = self.model.predict(X_test)
-                r2_test_value = r2_score(y_test, y_tilde)
+                r2_test_value = r2(y_test, y_tilde)
                 r2_test[r_idx, c_idx] = r2_test_value
-                mse_test_value = mean_squared_error(y_test, y_tilde)
+                mse_test_value = mse(y_test, y_tilde)
                 mse_test[r_idx, c_idx] = mse_test_value
 
                 if verbose is True:
@@ -126,12 +159,13 @@ class GridSearch:
                                   r2_train_value=r2_train_value,
                                   mse_train_value=mse_train_value,
                                   r2_test_value=r2_test_value,
-                                  mse_test_value=mse_test_value)
+                                  mse_test_value=mse_test_value,
+                                  elapsed=elapsed_value)
 
         if plot_results is True:
             self._plot_heatmaps(params=self.params, param1=param1,
                                 param2=param2, r2_train=r2_train,
                                 mse_train=mse_train, r2_test=r2_test,
-                                mse_test=mse_test)
+                                mse_test=mse_test, elapsed=elapsed)
 
-        return r2_train, mse_train, r2_test, mse_test
+        return r2_train, mse_train, r2_test, mse_test, elapsed

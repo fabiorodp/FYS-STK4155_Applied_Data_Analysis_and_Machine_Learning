@@ -158,7 +158,7 @@ class SGD(BGD):
 class MiniSGD(BGD):
     """Mini-batch Stochastic Gradient Descent."""
 
-    def __init__(self, batch_size=50, eta=0.1, epochs=1000, lambda_=0,
+    def __init__(self, batch_size=15, eta=0.01, epochs=1000, lambda_=0,
                  regularization=None, random_state=None):
         """
         Constructor for the class.
@@ -197,10 +197,10 @@ class MiniSGD(BGD):
 
                 self.coef_ -= self.eta * gradients
 
-    def set_batch_size(self, batch_size):
+    def set_batch_size(self, new_batch_size):
         """
         Changing the size of the mini batches.
 
-        :param batch_size: float: New mini-batch size.
+        :param new_batch_size: float: New mini-batch size.
         """
-        self.batch_size = batch_size
+        self.batch_size = new_batch_size
