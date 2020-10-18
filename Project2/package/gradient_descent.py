@@ -8,7 +8,8 @@ gradient_descent.py
 ~~~~~~~~~~
 
 A module to implement the many variants of gradient descent learning such as:
-Batch Gradient Descent (BGD), Stochastic Gradient Descent (SGD).
+Batch Gradient Descent (BGD), Stochastic Gradient Descent (SGD) and
+Mini-batch Stochastic Gradient Descent (MiniSGD).
 """
 
 import numpy as np
@@ -36,7 +37,7 @@ class BGD:
         self.epochs = epochs
         self.lambda_ = lambda_
         self.regularization = regularization
-        self.m, self.p, self.coef_ = None, None, None
+        self.coef_, self.gradients = None, None
 
     def fit(self, X, z):
         """
@@ -45,20 +46,19 @@ class BGD:
         :param X: ndarray with the design matrix.
         :param z: ndarray with the labeled response variables.
         """
-        self.m = X.shape[0]                      # sample space
-        self.p = X.shape[1]                      # feature space
-        self.coef_ = np.random.randn(self.p, 1)  # initializing coeff_
+        sample_space, feature_space = X.shape[0], X.shape[1]
+        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
 
         for _ in range(self.epochs):
-            gradients = 2.0 / self.m * X.T @ (X @ self.coef_ - z)
+            self.gradients = 2.0 / sample_space * X.T @ (X @ self.coef_ - z)
 
-            if self.regularization == "l2":      # Ridge regularization
-                gradients += self.lambda_ * self.coef_
+            if self.regularization == "l2":  # Ridge regularization
+                self.gradients += self.lambda_ * self.coef_
 
-            elif self.regularization == "l1":    # Lasso regularization
-                gradients += self.lambda_ * self.subgradient_vector()
+            elif self.regularization == "l1":  # Lasso regularization
+                self.gradients += self.lambda_ * self.subgradient_vector()
 
-            self.coef_ -= self.eta * gradients
+            self.coef_ -= self.eta * self.gradients
 
     def subgradient_vector(self):
         """Lasso's regularization sub-gradient vector."""
@@ -132,15 +132,61 @@ class SGD(BGD):
         :param X: ndarray with the design matrix.
         :param z: ndarray with the response variables.
         """
-        self.m = X.shape[0]                      # sample space
-        self.p = X.shape[1]                      # number of features
-        self.coef_ = np.random.randn(self.p, 1)  # initialising coeff_
+        sample_space, feature_space = X.shape[0], X.shape[1]
+        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
 
         for _ in range(self.epochs):
-            for _ in range(self.m):
-                random_index = np.random.randint(self.m)
+            for _ in range(sample_space):
+
+                # picking an idx stochastically
+                random_index = np.random.randint(sample_space)
                 xi = X[random_index:random_index + 1]
                 zi = z[random_index:random_index + 1]
+
+                # calculating gradient
+                self.gradients = 2 * xi.T @ (xi @ self.coef_ - zi)
+
+                if self.regularization == "l2":  # Ridge regularization
+                    self.gradients += self.lambda_ * self.coef_
+
+                elif self.regularization == "l1":  # Lasso regularization
+                    self.gradients += self.lambda_ * self.subgradient_vector()
+
+                self.coef_ -= self.eta * self.gradients
+
+
+class MiniSGD(BGD):
+    """Mini-batch Stochastic Gradient Descent."""
+
+    def __init__(self, batch_size=50, eta=0.1, epochs=1000, lambda_=0,
+                 regularization=None, random_state=None):
+        """
+        Constructor for the class.
+
+        :param lambda: float: Regularization value of the model.
+        :param random_state: int: Seed for the experiment.
+        """
+        super().__init__(eta, epochs, lambda_, regularization, random_state)
+        self.batch_size = batch_size
+
+    def fit(self, X, z):
+        """
+        Fitting parameters to regression model.
+
+        :param X: ndarray with the design matrix.
+        :param z: ndarray with the response variables.
+        """
+        sample_space, feature_space = X.shape[0], X.shape[1]
+        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
+        nr_batches = int(sample_space / self.batch_size)
+
+        for _ in range(self.epochs):
+            for _ in range(nr_batches):
+                batch_idxs = np.random.choice(sample_space,
+                                              self.batch_size,
+                                              replace=False)
+
+                xi, zi = X[batch_idxs], z[batch_idxs]
                 gradients = 2 * xi.T @ (xi @ self.coef_ - zi)
 
                 if self.regularization == "l2":  # Ridge regularization
@@ -150,3 +196,11 @@ class SGD(BGD):
                     gradients += self.lambda_ * self.subgradient_vector()
 
                 self.coef_ -= self.eta * gradients
+
+    def set_batch_size(self, batch_size):
+        """
+        Changing the size of the mini batches.
+
+        :param batch_size: float: New mini-batch size.
+        """
+        self.batch_size = batch_size
