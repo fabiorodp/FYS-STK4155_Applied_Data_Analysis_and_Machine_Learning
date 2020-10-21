@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from imageio import imread
 
 # ################################## generating data from GeoTIF image
-terrain = imread('Project2/data/SRTM_data_Norway_1.tif')
+terrain = imread('data/SRTM_data_Norway_1.tif')
 terrain = terrain[:20, :20]
 x = np.linspace(0, 1, np.shape(terrain)[0])
 y = np.linspace(0, 1, np.shape(terrain)[1])
@@ -56,7 +56,7 @@ hidden_layers = [50, 10, 5, 5]
 batch_size = 1
 eta = 0.01
 epochs = 1000
-costs = [0 for _ in range(epochs)]
+error = [0 for _ in range(epochs)]
 act_function = sigmoid
 act_function_prime = sigmoid_prime
 out_act_function = lambda x: x
@@ -72,7 +72,7 @@ labels_space = z_train.shape[1]
 batch_space = sample_space // batch_size
 
 # ######################################## activations and weights
-a, zs = [None], [None]
+a, net_input = [None], [None]
 weights, weight_biases = [None], [None]
 
 # ######################################## Gaussian weights for hidden layers
@@ -86,18 +86,18 @@ for idx, n_neurons in enumerate(hidden_layers):  # 50, 10, 5 , 5
         weight_biases.append(np.zeros((1, n_neurons)) + bias)
 
     a.append(None)
-    zs.append(None)
+    net_input.append(None)
 
 for idx in range(1, labels_space + 1):
     weights.append(np.random.randn(hidden_layers[-1], idx))
     weight_biases.append(np.zeros((1, labels_space)) + bias)
 
     a.append(None)
-    zs.append(None)
+    net_input.append(None)
 
 # ######################################## training data
-for i in range(epochs):
-    cost = None
+for epoch in range(epochs):
+    # epoch = 1  # delete it
     for j in range(batch_space):
         batch_idxs = np.random.choice(sample_space, batch_size, replace=False)
 
@@ -107,52 +107,54 @@ for i in range(epochs):
         # ######################################## Feed-forward:
         a[0] = Xi  # input activation is the mini-batch of X_train
 
-        for idx in range(len(a)):  # 0, 1, 2, 3, 4, 5
+        for idx in range(len(a)):  # idx: 0, 1, 2, 3, 4, 5
+            if 0 <= idx < len(a)-2:  # idx: 0, 1, 2, 3, 4
+                net_input[idx+1] = \
+                    a[idx] @ weights[idx+1] + weight_biases[idx+1]
 
-            if 0 <= idx < len(a)-2:  # 0, 1, 2, 3, 4
-                zs[idx+1] = a[idx] @ weights[idx+1] + weight_biases[idx+1]
-                a[idx + 1] = act_function(zs[idx+1])
+                a[idx + 1] = act_function(net_input[idx+1])
 
             elif idx == len(a)-2:  # output | idx: 5
-                zs[idx+1] = a[idx] @ weights[idx+1] + weight_biases[idx+1]
-                a[idx + 1] = out_act_function(zs[idx+1])
+                net_input[idx+1] = \
+                    a[idx] @ weights[idx+1] + weight_biases[idx+1]
+
+                a[idx + 1] = out_act_function(net_input[idx+1])
 
         # ######################################## Back-propagation:
-        cost = cost_function(y_true=zi, y_hat=a[-1])
-        i = 0  # delete
-        costs[i] = cost
-
-        for idx in range(1, len(a)):
-            w_gradient, wb_gradient = None, None
-
+        deltas = [None for _ in range(len(weights))]
+        for idx in range(1, len(weights)):  # 1, 2, 3, 4, 5
             if idx == 1:  # -1
-                idx = 1  # delete it
-                cost_prime = cost_function_prime(y_true=zi, y_hat=a[-idx])
-                z_prime = out_act_function_prime(zs[-idx])
-                w_gradient = cost_prime @ z_prime @ a[-(idx+1)]
-                wb_gradient = cost_prime @ z_prime
+                # idx = 1  # delete it
+                error[epoch] = cost_function(y_true=zi, y_hat=a[-1])
+                error_prime = cost_function_prime(y_true=zi, y_hat=a[-idx])
+                z_prime = out_act_function_prime(net_input[-idx])
+                w_gradient = a[-(idx+1)].T @ error_prime @ z_prime  # delta-1
+                deltas[-idx] = w_gradient
+                wb_gradient = error_prime @ z_prime
 
                 # regularization "l2"
                 if lmbd > 0:
                     w_gradient = w_gradient + lmbd * weights[-idx]
 
                 # updating weights and biases
-                weights[-idx] = weights[-idx] - eta * w_gradient
-                weight_biases[-idx] = weight_biases[-idx] - eta * wb_gradient
+                weights[-idx] -= eta * w_gradient
+                weight_biases[-idx] -= eta * wb_gradient
 
             else:  # -2, -3, -4, -5
-                idx = 2  # delete it
-                previous_w_gradient = w_gradient
-                previous_wb_gradient = wb_gradient
-                w_gradient =  # ????
-                wb_gradient =  # ????
+                # idx = 2  # delete it
+                erro_prime = deltas[-(idx-1)]
+                z_prime = act_function_prime(net_input[-idx])
+                w_gradient = a[-(idx+1)].T @ erro_prime @ z_prime
+                deltas[-idx] = w_gradient
+                wb_gradient = a[-idx] @ deltas[-idx]
 
                 # regularization "l2"
                 if lmbd > 0:
                     w_gradient = w_gradient + lmbd * weights[-idx]
 
                 # updating weights and biases
-                weights[-idx] = weights[-idx] - eta * w_gradient
-                weight_biases[-idx] = weight_biases[-idx] - eta * wb_gradient
+                weights[-idx] -= eta * w_gradient
+                weight_biases[-idx] -= eta * wb_gradient
 
-    print(f'Epoch {i + 1}/{epochs}  |   Cost: {cost}', end='\r')
+    print(f'Epoch {epoch+1}/{epochs}  |   '
+          f'Total Error: {error[epoch]}', end='\r')
