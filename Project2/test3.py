@@ -51,12 +51,12 @@ def mse_prime(y_true, y_hat):
 # ##################################################  Deep neural network
 # ##################################################  init parameters
 lmbd = 0
-bias = 0.1
-hidden_layers = [50, 10, 5, 5]
-batch_size = 1
+bias = 1
+hidden_layers = [100]
+batch_size = 15
 eta = 0.01
-epochs = 1000
-error = [0 for _ in range(epochs)]
+epochs = 100
+costs = np.empty(epochs)
 act_function = sigmoid
 act_function_prime = sigmoid_prime
 out_act_function = lambda x: x
@@ -72,89 +72,115 @@ labels_space = z_train.shape[1]
 batch_space = sample_space // batch_size
 
 # ######################################## activations and weights
-a, net_input = [None], [None]
-weights, weight_biases = [None], [None]
+act, net_input = [None], [None]
+weights, biases = [None], [None]
 
 # ######################################## Gaussian weights for hidden layers
 for idx, n_neurons in enumerate(hidden_layers):  # 50, 10, 5 , 5
     if idx == 0:
         weights.append(np.random.randn(feature_space, n_neurons))
-        weight_biases.append(np.zeros((1, n_neurons)) + bias)
+        biases.append(np.zeros((1, n_neurons)) + bias)
+        # biases.append(np.zeros((n_neurons)) + bias)
 
     elif 0 < idx <= len(hidden_layers):  # idx: 1, 2, 3  |  n_: 10, 5, 5
         weights.append(np.random.randn(hidden_layers[idx - 1], n_neurons))
-        weight_biases.append(np.zeros((1, n_neurons)) + bias)
+        biases.append(np.zeros((1, n_neurons)) + bias)
+        # biases.append(np.zeros((n_neurons)) + bias)
 
-    a.append(None)
+    act.append(None)
     net_input.append(None)
 
 for idx in range(1, labels_space + 1):
     weights.append(np.random.randn(hidden_layers[-1], idx))
-    weight_biases.append(np.zeros((1, labels_space)) + bias)
+    biases.append(np.zeros((1, labels_space)) + bias)
+    # biases.append(np.zeros((labels_space)) + bias)
 
-    a.append(None)
+    act.append(None)
     net_input.append(None)
 
 # ######################################## training data
 for epoch in range(epochs):
-    # epoch = 1  # delete it
+    # epoch = 0  # delete it
     for j in range(batch_space):
         batch_idxs = np.random.choice(sample_space, batch_size, replace=False)
 
         # ######################################## mini-batches training
-        Xi, zi = X_train[batch_idxs], z_train[batch_idxs]
+        X_mini_batch, z_mini_batch = X_train[batch_idxs], z_train[batch_idxs]
 
         # ######################################## Feed-forward:
-        a[0] = Xi  # input activation is the mini-batch of X_train
+        act[0] = X_mini_batch
 
-        for idx in range(len(a)):  # idx: 0, 1, 2, 3, 4, 5
-            if 0 <= idx < len(a)-2:  # idx: 0, 1, 2, 3, 4
-                net_input[idx+1] = \
-                    a[idx] @ weights[idx+1] + weight_biases[idx+1]
+        for step in range(len(act)):
+            if 0 <= step < len(act)-2:
+                net_input[step+1] = \
+                    act[step] @ weights[step+1] + biases[step+1]
 
-                a[idx + 1] = act_function(net_input[idx+1])
+                act[step+1] = act_function(net_input[step+1])
 
-            elif idx == len(a)-2:  # output | idx: 5
-                net_input[idx+1] = \
-                    a[idx] @ weights[idx+1] + weight_biases[idx+1]
+            elif step == len(act)-2:
+                net_input[step+1] = \
+                    act[step] @ weights[step+1] + biases[step+1]
 
-                a[idx + 1] = out_act_function(net_input[idx+1])
+                act[step+1] = out_act_function(net_input[step+1])
 
         # ######################################## Back-propagation:
         deltas = [None for _ in range(len(weights))]
-        for idx in range(1, len(weights)):  # 1, 2, 3, 4, 5
-            if idx == 1:  # -1
-                # idx = 1  # delete it
-                error[epoch] = cost_function(y_true=zi, y_hat=a[-1])
-                error_prime = cost_function_prime(y_true=zi, y_hat=a[-idx])
-                z_prime = out_act_function_prime(net_input[-idx])
-                w_gradient = a[-(idx+1)].T @ error_prime @ z_prime  # delta-1
-                deltas[-idx] = w_gradient
-                wb_gradient = error_prime @ z_prime
+        for step in range(1, len(weights)):
 
-                # regularization "l2"
+            if step == 1:
+                # calculating the total cost/loss/error
+                costs[epoch] = cost_function(y_true=z_mini_batch,
+                                             y_hat=act[-step])
+
+                # calculating the partial derivatives
+                # for cost, act.func and net_input
+                cost_prime = cost_function_prime(y_true=z_mini_batch,
+                                                 y_hat=act[-step])
+                act_func_prime = out_act_function_prime(net_input[-step])
+                net_input_prime_w = act[-(step+1)].T
+                net_input_prime_b = cost_prime * act_func_prime
+
+                # calculating the gradients
+                # for weight and bias
+                w_gradient = net_input_prime_w @ (cost_prime * act_func_prime)
+                b_gradient = np.sum(net_input_prime_b, axis=0)
+
+                # calculating the regularization "l2"
                 if lmbd > 0:
-                    w_gradient = w_gradient + lmbd * weights[-idx]
+                    w_gradient += lmbd * weights[-step]
+
+                # updating weight and bias
+                weights[-step] -= eta * w_gradient
+                biases[-step] -= eta * b_gradient
+
+                # saving delta for next step
+                deltas[-step] = cost_prime * act_func_prime
+
+            else:
+                # calculating the partial derivatives
+                cost_prime = deltas[-(step-1)] @ weights[-(step-1)].T
+                act_func_prime = act_function_prime(net_input[-step])
+                net_input_prime_w = act[-(step+1)].T
+                net_input_prime_b = cost_prime * act_func_prime
+
+                # calculating the gradient
+                w_gradient = net_input_prime_w @ (cost_prime * act_func_prime)
+                b_gradient = np.sum(net_input_prime_b, axis=0)
+
+                # calculating the regularization "l2"
+                if lmbd > 0:
+                    w_gradient += lmbd * weights[-step]
 
                 # updating weights and biases
-                weights[-idx] -= eta * w_gradient
-                weight_biases[-idx] -= eta * wb_gradient
+                weights[-step] -= eta * w_gradient
+                biases[-step] -= eta * b_gradient
 
-            else:  # -2, -3, -4, -5
-                # idx = 2  # delete it
-                erro_prime = deltas[-(idx-1)]
-                z_prime = act_function_prime(net_input[-idx])
-                w_gradient = a[-(idx+1)].T @ erro_prime @ z_prime
-                deltas[-idx] = w_gradient
-                wb_gradient = a[-idx] @ deltas[-idx]
-
-                # regularization "l2"
-                if lmbd > 0:
-                    w_gradient = w_gradient + lmbd * weights[-idx]
-
-                # updating weights and biases
-                weights[-idx] -= eta * w_gradient
-                weight_biases[-idx] -= eta * wb_gradient
+                # saving delta for next step
+                deltas[-step] = cost_prime * act_func_prime
 
     print(f'Epoch {epoch+1}/{epochs}  |   '
-          f'Total Error: {error[epoch]}', end='\r')
+          f'Total Error: {costs[epoch]}', end='\r')
+
+import matplotlib.pyplot as plt
+plt.plot(np.arange(epochs), costs)
+plt.show()
