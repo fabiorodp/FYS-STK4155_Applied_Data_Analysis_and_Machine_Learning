@@ -10,7 +10,7 @@ grid_search.py
 A module to implement Grid Searches.
 """
 
-from Project2.package.accuracies import r2, mse
+from Project2.package.cost_functions import r2, mse
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np

@@ -178,10 +178,10 @@ class MiniSGD(BGD):
         """
         sample_space, feature_space = X.shape[0], X.shape[1]
         self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
-        nr_batches = int(sample_space / self.batch_size)
+        batch_space = int(sample_space / self.batch_size)
 
         for _ in range(self.epochs):
-            for _ in range(nr_batches):
+            for _ in range(batch_space):
                 batch_idxs = np.random.choice(sample_space,
                                               self.batch_size,
                                               replace=False)
