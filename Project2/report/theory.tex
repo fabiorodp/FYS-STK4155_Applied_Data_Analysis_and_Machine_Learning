@@ -1,0 +1,72 @@
+\section{Theory}
+\label{chap:Theory}
+
+
+\subsection{Stochastic Gradient Decedent}
+\label{chap:Stochastic Gradient Decedent}
+
+\subsubsection{Number of interactions - epochs}
+\label{chap:Number of interactions - epochs}
+
+\subsubsection{Learning Rate ($\eta$)}
+\label{chap:Learning Rate}
+
+\subsubsection{Batch and Mini-batches}
+\label{chap:Batch and Mini-batches}
+
+\subsubsection{Regularization "L2"}
+\label{chap:Regularization "L2"}
+
+\subsubsection{Mini-Stochastic Gradient Decedent}
+\label{chap:Mini-Stochastic Gradient Decedent}
+
+
+\subsection{Deep Neural Networks}
+\label{chap:Deep Neural Networks}
+
+\subsubsection{Feed-Forward}
+\label{chap:Feed-Forward}
+
+\subsubsection{Back-propagation}
+\label{chap:Back-propagation}
+
+\subsubsection{Step by step Back-propagation's maths}
+\label{chap:Step by step Back-propagation's maths}
+
+\qquad \, Assume that I have lists of arrays, such that:
+
+\begin{align*}
+activation := a = [a_{in}^{[0]}, a^{[1]}, ..., a^{[-2]}, a_{out}^{[-1]}]\\
+net-input := z = [None^{[0]}, z^{[1]}, ..., z^{[-2]}, z_{out}^{[-1]}]\\
+weights: w = [None^{[0]}, w^{[1]}, ..., w^{[-2]}, w_{out}^{[-1]}]\\
+biases := b = [None^{[0]}, b^{[1]}, ..., b^{[-2]}, b_{out}^{[-1]}]\\
+\end{align*}
+
+First, I constructed the partial derivative tree:\\
+
+Then, the first and output step (backwards) $*_{out}^{[-1]}$ of the back-propagation is:\\
+
+# Gradient calculation:\\
+\begin{align*}
+\frac{\partial C(MSE)}{\partial w_{out}^{[-1]}} &= \frac{\partial C(MSE)}{\partial a_{out}^{[-1]}} @ \frac{\partial a_{out}^{[-1]}}{\partial z_{out}^{[-1]}} @ \frac{\partial z_{out}^{[-1]}}{\partial w_{out}^{[-1]}}\\
+&= [C(MSE)]' @ [f(z)]' @ [z]'\\
+&= \frac{2}{n}(a_{out}^{[-1]}-y_{true}) @ [[1]] @ a^{[-2]}
+\end{align*}
+
+\begin{align*}
+\frac{\partial C (MSE)}{\partial b_{out}^{[-1]}} &= \frac{\partial C (MSE)}{\partial a_{out}^{[-1]}} @ \frac{\partial a_{out}^{[-1]}}{\partial z_{out}^{[-1]}} @ \frac{\partial z_{out}^{[-1]}}{\partial b_{out}^{[-1]}}\\ 
+&= \frac{2}{n}(a_{out}^{[-1]}-y_{true})@ [[1]] @ 1
+\end{align*}
+
+Weights and bias update:\\
+
+\begin{align*}
+w_{out}^{[-1]} = w_{out}^{[-1]} - \eta * \frac{\partial C(MSE)}{\partial w_{out}^{[-1]}}
+\end{align*}
+
+\begin{align*}
+b_{out}^{[-1]} = b_{out}^{[-1]} - \eta * \frac{\partial C(MSE)}{\partial b_{out}^{[-1]}}
+\end{align*}
+
+The second, and so on steps ($*^{[-2]}, ..., *^{[1]}$), of the back-propagation are:\\
+
