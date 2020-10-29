@@ -50,6 +50,14 @@ class GridSearch:
                 plt.xlabel(f"Learning rate $\eta$ = {param1}")
                 plt.ylabel(f"Batch sizes = {param2}")
 
+            elif params == 'ETASxDECAYS':
+                plt.xlabel(f"Learning rate $\eta$ = {param1}")
+                plt.ylabel(f"Decays = {param2}")
+
+            elif params == 'ETASxGAMMAS':
+                plt.xlabel(f"Learning rate $\eta$ = {param1}")
+                plt.ylabel(f"Gamma $\gamma$ = {param2}")
+
             plt.title(title)
             plt.show()
 
@@ -65,6 +73,12 @@ class GridSearch:
 
         elif params == 'ETASxBATCHES':
             print(f'Eta and Batch size: {p1}, {p2}.')
+
+        elif params == 'ETASxDECAYS':
+            print(f'Eta and decay: {p1}, {p2}.')
+
+        elif params == 'ETASxGAMMAS':
+            print(f'Eta and gamma: {p1}, {p2}.')
 
         print(f'Training R2 and MSE: '
               f'{r2_train_value}, {mse_train_value}.')
@@ -90,8 +104,9 @@ class GridSearch:
         self.params = params
         self.random_state = random_state
 
-    def run(self, X_train, X_test, y_train, y_test, lambdas, etas, epochs,
-            batch_sizes, plot_results=False, verbose=False):
+    def run(self, X_train, X_test, y_train, y_test, epochs, etas,
+            batch_sizes, lambdas, decays, gammas, plot_results=False,
+            verbose=False):
         """
         Run the experiment to search the best parameters.
         """
@@ -106,6 +121,12 @@ class GridSearch:
         elif self.params == 'ETASxBATCHES':
             param1, param2 = etas, batch_sizes
 
+        elif self.params == 'ETASxDECAYS':
+            param1, param2 = etas, decays
+
+        elif self.params == 'ETASxGAMMAS':
+            param1, param2 = etas, gammas
+
         mse_train = np.zeros(shape=(len(param2), len(param1)))
         mse_test = np.zeros(shape=(len(param2), len(param1)))
         r2_train = np.zeros(shape=(len(param2), len(param1)))
@@ -119,20 +140,38 @@ class GridSearch:
                 if self.params == 'ETASxLAMBDAS':
                     self.model.set_lambda(new_lambda=p2)
                     self.model.set_eta(new_eta=p1)
+                    self.model.set_decay(new_decay=decays)
                     self.model.set_epochs(new_epochs=epochs)
                     self.model.set_batch_size(new_batch_size=batch_sizes)
 
                 elif self.params == 'ETASxEPOCHS':
                     self.model.set_epochs(new_epochs=p2)
                     self.model.set_eta(new_eta=p1)
+                    self.model.set_decay(new_decay=decays)
                     self.model.set_lambda(new_lambda=lambdas)
                     self.model.set_batch_size(new_batch_size=batch_sizes)
 
                 elif self.params == 'ETASxBATCHES':
                     self.model.set_epochs(new_epochs=epochs)
                     self.model.set_eta(new_eta=p1)
+                    self.model.set_decay(new_decay=decays)
                     self.model.set_lambda(new_lambda=lambdas)
                     self.model.set_batch_size(new_batch_size=p2)
+
+                elif self.params == 'ETASxDECAYS':
+                    self.model.set_epochs(new_epochs=epochs)
+                    self.model.set_eta(new_eta=p1)
+                    self.model.set_decay(new_decay=p2)
+                    self.model.set_lambda(new_lambda=lambdas)
+                    self.model.set_batch_size(new_batch_size=batch_sizes)
+
+                elif self.params == 'ETASxGAMMAS':
+                    self.model.set_epochs(new_epochs=epochs)
+                    self.model.set_eta(new_eta=p1)
+                    self.model.set_decay(new_decay=decays)
+                    self.model.set_lambda(new_lambda=lambdas)
+                    self.model.set_batch_size(new_batch_size=batch_sizes)
+                    self.model.set_gamma(new_gamma=p2)
 
                 # train model
                 time0 = time()

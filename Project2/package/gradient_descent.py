@@ -13,19 +13,24 @@ Mini-batch Stochastic Gradient Descent (MiniSGD).
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
-class BGD:
-    """Batch Gradient Descent."""
+class BGDM:
+    """Batch Gradient Descent with momentum."""
 
-    def __init__(self, eta=0.1, epochs=1000, lambda_=0, regularization=None,
-                 random_state=None):
+    def __init__(self, epochs=1000, eta0=0.1, decay=0., lambda_=0,
+                 gamma=0, regularization=None, random_state=None):
         """
         Constructor for the class.
 
-        :param eta: float: Learning rate.
         :param epochs: int: Number of epochs/interactions.
+        :param eta0: float: Learning rate.
+        :param decay: float: Amount of reduction of the learning rate.
+                             Equals to 0 means constant eta value for
+                             all epochs.
         :param lambda_: float: Regularization value.
+        :param gamma: float: Momentum value between 0 and 1.
         :param regularization: string: It can be "l2" for ridge or
                                                  "l1" lasso.
         :param random_state: int: Seed for the experiment.
@@ -33,32 +38,43 @@ class BGD:
         if random_state is not None:
             np.random.seed(random_state)
 
-        self.eta = eta
         self.epochs = epochs
+        self.etas = []
+        self.eta0 = eta0
+        self.decay = decay
         self.lambda_ = lambda_
         self.regularization = regularization
-        self.coef_, self.gradients = None, None
+        self.velocity = 0
+        self.gamma = gamma
+        self.coef_ = None
 
-    def fit(self, X, z):
+    def fit(self, X, z, plot_etas=False):
         """
         Fitting parameters to regression model.
 
         :param X: ndarray with the design matrix.
         :param z: ndarray with the labeled response variables.
+        :param plot_etas: bool: if True, plot epoch X eta.
         """
         sample_space, feature_space = X.shape[0], X.shape[1]
-        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
+        self.coef_ = np.random.randn(feature_space, 1)
 
-        for _ in range(self.epochs):
-            self.gradients = 2.0 / sample_space * X.T @ (X @ self.coef_ - z)
+        for epoch in range(self.epochs):
+            gradients = 2.0 / sample_space * X.T @ (X @ self.coef_ - z)
 
             if self.regularization == "l2":  # Ridge regularization
-                self.gradients += self.lambda_ * self.coef_
+                gradients += self.lambda_ * self.coef_
 
             elif self.regularization == "l1":  # Lasso regularization
-                self.gradients += self.lambda_ * self.subgradient_vector()
+                gradients += self.lambda_ * self.subgradient_vector()
 
-            self.coef_ -= self.eta * self.gradients
+            self.velocity = \
+                self.gamma * self.velocity + self.eta(epoch) * gradients
+
+            self.coef_ -= self.velocity
+
+        if plot_etas is True:
+            self.plot_etas()
 
     def subgradient_vector(self):
         """Lasso's regularization sub-gradient vector."""
@@ -82,7 +98,7 @@ class BGD:
 
         :param new_eta: float: New eta value.
         """
-        self.eta = new_eta
+        self.eta0 = new_eta
 
     def set_epochs(self, new_epochs):
         """
@@ -111,76 +127,57 @@ class BGD:
         """
         return X @ self.coef_
 
+    def set_decay(self, new_decay):
+        """Set new decay for eta."""
+        self.decay = new_decay
 
-class SGD(BGD):
-    """Stochastic Gradient Descent."""
+    def eta(self, epoch):
+        """Update learning rates (etas values) for every epoch."""
+        eta = self.eta0 * (1.0 / (1.0 + self.decay * epoch))
+        self.etas.append(eta)
+        return eta
 
-    def __init__(self, eta=0.1, epochs=1000, lambda_=0, regularization=None,
-                 random_state=None):
+    def set_gamma(self, new_gamma):
+        """Set new parameter gamma."""
+        self.gamma = new_gamma
+
+    def plot_etas(self):
+        plt.plot(x=range(len(self.etas)), y=self.etas, label='Learning rates')
+        plt.title('Epochs x Learning rates with decay')
+        plt.xlabel('Epoch')
+        plt.ylabel('Learning rate with decay ($\eta$)')
+        plt.tight_layout()
+        plt.show()
+
+
+class MiniSGDM(BGDM):
+    """Mini-batch Stochastic Gradient Descent with momentum."""
+
+    def __init__(self, batch_size=15, epochs=1000, eta0=0.1, decay=0.,
+                 lambda_=0, gamma=0, regularization=None, random_state=None):
         """
         Constructor for the class.
 
         :param lambda: float: Regularization value of the model.
         :param random_state: int: Seed for the experiment.
         """
-        super().__init__(eta, epochs, lambda_, regularization, random_state)
-
-    def fit(self, X, z):
-        """
-        Fitting parameters to regression model.
-
-        :param X: ndarray with the design matrix.
-        :param z: ndarray with the response variables.
-        """
-        sample_space, feature_space = X.shape[0], X.shape[1]
-        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
-
-        for _ in range(self.epochs):
-            for _ in range(sample_space):
-
-                # picking an idx stochastically
-                random_index = np.random.randint(sample_space)
-                xi = X[random_index:random_index + 1]
-                zi = z[random_index:random_index + 1]
-
-                # calculating gradient
-                self.gradients = 2 * xi.T @ (xi @ self.coef_ - zi)
-
-                if self.regularization == "l2":  # Ridge regularization
-                    self.gradients += self.lambda_ * self.coef_
-
-                elif self.regularization == "l1":  # Lasso regularization
-                    self.gradients += self.lambda_ * self.subgradient_vector()
-
-                self.coef_ -= self.eta * self.gradients
-
-
-class MiniSGD(BGD):
-    """Mini-batch Stochastic Gradient Descent."""
-
-    def __init__(self, batch_size=15, eta=0.01, epochs=1000, lambda_=0,
-                 regularization=None, random_state=None):
-        """
-        Constructor for the class.
-
-        :param lambda: float: Regularization value of the model.
-        :param random_state: int: Seed for the experiment.
-        """
-        super().__init__(eta, epochs, lambda_, regularization, random_state)
+        super().__init__(epochs, eta0, decay, lambda_, gamma, regularization,
+                         random_state)
         self.batch_size = batch_size
 
-    def fit(self, X, z):
+    def fit(self, X, z, plot_etas=False):
         """
         Fitting parameters to regression model.
 
         :param X: ndarray with the design matrix.
         :param z: ndarray with the response variables.
+        :param plot_etas: bool: if True, plot epoch X eta.
         """
         sample_space, feature_space = X.shape[0], X.shape[1]
-        self.coef_ = np.random.randn(feature_space, 1)  # initialising coeff_
-        batch_space = int(sample_space / self.batch_size)
+        self.coef_ = np.random.randn(feature_space, 1)
+        batch_space = sample_space // self.batch_size
 
-        for _ in range(self.epochs):
+        for epoch in range(self.epochs):
             for _ in range(batch_space):
                 batch_idxs = np.random.choice(sample_space,
                                               self.batch_size,
@@ -195,7 +192,13 @@ class MiniSGD(BGD):
                 elif self.regularization == "l1":  # Lasso regularization
                     gradients += self.lambda_ * self.subgradient_vector()
 
-                self.coef_ -= self.eta * gradients
+                self.velocity = \
+                    self.gamma * self.velocity + self.eta(epoch) * gradients
+
+                self.coef_ -= self.velocity
+
+        if plot_etas is True:
+            self.plot_etas()
 
     def set_batch_size(self, new_batch_size):
         """

@@ -18,9 +18,8 @@ import matplotlib.pyplot as plt
 
 
 def terrain_data(file='data/SRTM_data_Norway_1.tif', slice_size=20,
-                 split=True, test_size=0.2, shuffle=True,
-                 stratify=None, scale_X=True, scale_z=False,
-                 random_state=None):
+                 test_size=0.2, shuffle=True, stratify=None, scale_X=True,
+                 scale_z=False, random_state=None):
     """Module to import the GeoTIF terrain data."""
     terrain = imread(file)
     terrain = terrain[:slice_size, :slice_size]
@@ -32,13 +31,10 @@ def terrain_data(file='data/SRTM_data_Norway_1.tif', slice_size=20,
     X = np.hstack((x1[:, np.newaxis], x2[:, np.newaxis]))
     z = np.asarray(terrain.flatten())[:, np.newaxis]
 
-    X_train, X_test, z_train, z_test = None, None, None, None
-
     # splitting data
-    if split is True:
-        X_train, X_test, z_train, z_test = train_test_split(
-            X, z, test_size=test_size, shuffle=shuffle, stratify=stratify,
-            random_state=random_state)
+    X_train, X_test, z_train, z_test = train_test_split(
+        X, z, test_size=test_size, shuffle=shuffle, stratify=stratify,
+        random_state=random_state)
 
     # scaling X data
     if scale_X is True:
