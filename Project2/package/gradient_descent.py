@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 class BGDM:
     """Batch Gradient Descent with momentum."""
 
-    def __init__(self, epochs=1000, eta0=0.1, decay=0., lambda_=0,
-                 gamma=0, regularization=None, random_state=None):
+    def __init__(self, epochs=1000, eta0=0.1, decay=0.0, lambda_=0.0,
+                 gamma=0.0, regularization=None, random_state=None):
         """
         Constructor for the class.
 
@@ -44,7 +44,7 @@ class BGDM:
         self.decay = decay
         self.lambda_ = lambda_
         self.regularization = regularization
-        self.velocity = 0
+        self.velocity = 0.0
         self.gamma = gamma
         self.coef_ = None
 
@@ -62,16 +62,22 @@ class BGDM:
         for epoch in range(self.epochs):
             gradients = 2.0 / sample_space * X.T @ (X @ self.coef_ - z)
 
+            # regularization
             if self.regularization == "l2":  # Ridge regularization
                 gradients += self.lambda_ * self.coef_
 
             elif self.regularization == "l1":  # Lasso regularization
                 gradients += self.lambda_ * self.subgradient_vector()
 
-            self.velocity = \
-                self.gamma * self.velocity + self.eta(epoch) * gradients
+            # calculating momentum, learning rate and updating weights
+            if 0.0 <= self.gamma <= 1.0:
+                self.velocity = (self.gamma * self.velocity) + \
+                                (self.eta(epoch) * gradients)
+                self.coef_ -= self.velocity
 
-            self.coef_ -= self.velocity
+            else:
+                raise ValueError(
+                    "Gamma's value must be: 0 <= gamma <= 1.")
 
         if plot_etas is True:
             self.plot_etas()
@@ -81,14 +87,14 @@ class BGDM:
         g = np.zeros(self.coef_.shape)
         for idx, theta in enumerate(self.coef_):
 
-            if theta < 0:
-                g[idx, 0] = -1.0
+            if theta < 0.0:
+                g[idx, 0.0] = -1.0
 
-            elif theta == 0:
-                g[idx, 0] = 0.0
+            elif theta == 0.0:
+                g[idx, 0.0] = 0.0
 
-            elif theta > 0:
-                g[idx, 0] = 1.0
+            elif theta > 0.0:
+                g[idx, 0.0] = 1.0
 
         return g
 
@@ -153,16 +159,17 @@ class BGDM:
 class MiniSGDM(BGDM):
     """Mini-batch Stochastic Gradient Descent with momentum."""
 
-    def __init__(self, batch_size=15, epochs=1000, eta0=0.1, decay=0.,
-                 lambda_=0, gamma=0, regularization=None, random_state=None):
+    def __init__(self, batch_size=15, epochs=1000, eta0=0.1, decay=0.0,
+                 lambda_=0.0, gamma=0.0, regularization=None,
+                 random_state=None):
         """
         Constructor for the class.
 
         :param lambda: float: Regularization value of the model.
         :param random_state: int: Seed for the experiment.
         """
-        super().__init__(epochs, eta0, decay, lambda_, gamma, regularization,
-                         random_state)
+        super().__init__(epochs, eta0, decay, lambda_, gamma,
+                         regularization, random_state)
         self.batch_size = batch_size
 
     def fit(self, X, z, plot_etas=False):
@@ -184,18 +191,24 @@ class MiniSGDM(BGDM):
                                               replace=False)
 
                 xi, zi = X[batch_idxs], z[batch_idxs]
-                gradients = 2 * xi.T @ (xi @ self.coef_ - zi)
+                gradients = 2.0 * xi.T @ (xi @ self.coef_ - zi)
 
+                # regularization
                 if self.regularization == "l2":  # Ridge regularization
                     gradients += self.lambda_ * self.coef_
 
                 elif self.regularization == "l1":  # Lasso regularization
                     gradients += self.lambda_ * self.subgradient_vector()
 
-                self.velocity = \
-                    self.gamma * self.velocity + self.eta(epoch) * gradients
+                # calculating momentum, learning rate and updating weights
+                if 0.0 <= self.gamma <= 1.0:
+                    self.velocity = self.gamma * self.velocity + \
+                                    self.eta0 * gradients
+                    self.coef_ -= self.velocity
 
-                self.coef_ -= self.velocity
+                else:
+                    raise ValueError(
+                        "Gamma's value must be: 0 <= gamma <= 1.")
 
         if plot_etas is True:
             self.plot_etas()

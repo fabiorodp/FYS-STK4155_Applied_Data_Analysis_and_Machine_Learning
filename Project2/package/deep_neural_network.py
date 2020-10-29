@@ -83,7 +83,7 @@ class MLP:
             raise ValueError("Error: Output activation function not "
                              "implemented.")
 
-    def __init__(self, lmbd=0., bias=0.1, hidden_layers=[50, 10, 5, 5],
+    def __init__(self, lmbd=0.0, bias=0.1, hidden_layers=[50, 10, 5, 5],
                  batch_size=15, eta=0.01, epochs=1000,
                  act_function='sigmoid', out_act_function='identity',
                  cost_function='mse', random_state=None):
@@ -129,7 +129,6 @@ class MLP:
             self.set_act_function(act_function)
         self.out_act_function, self.out_act_function_prime = \
             self.set_act_function(out_act_function)
-        cost_function = mse
         self.cost_function, self.cost_function_prime = \
             self.set_cost_function(cost_function)
         self.random_state = random_state
@@ -206,7 +205,7 @@ class MLP:
                 b_gradient = np.sum(net_input_prime_b, axis=0)
 
                 # calculating the regularization "l2"
-                if self.lmbd > 0:
+                if self.lmbd > 0.0:
                     w_gradient += self.lmbd * self.weights[-step]
 
                 # updating weight and bias
@@ -229,7 +228,7 @@ class MLP:
                 b_gradient = np.sum(net_input_prime_b, axis=0)
 
                 # calculating the regularization "l2"
-                if self.lmbd > 0:
+                if self.lmbd > 0.0:
                     w_gradient += self.lmbd * self.weights[-step]
 
                 # updating weights and biases

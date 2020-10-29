@@ -15,20 +15,20 @@ import numpy as np
 
 def r2(y_real, y_predict):
     """The r2 score function."""
-    return 1 - np.sum(
+    return 1.0 - np.sum(
         (y_real - y_predict) ** 2) / np.sum((y_real - np.mean(y_real)) ** 2)
 
 
 def mse(y_true, y_hat):
     """The MSE function."""
     n = np.size(y_hat)
-    return np.sum((y_hat - y_true) ** 2.) / n
+    return np.sum((y_hat - y_true) ** 2.0) / n
 
 
 def mse_prime(y_true, y_hat):
     """Derivative of the MSE function."""
     n = np.size(y_hat)
-    return 2. / n * (y_hat - y_true)
+    return 2.0 / n * (y_hat - y_true)
 
 
 def accuracy_score(y_real, y_pred):
@@ -36,11 +36,11 @@ def accuracy_score(y_real, y_pred):
 
 
 def crossentropy(x, y):
-    return - (y * np.log(x) + (1 - y) * np.log(1 - x)).mean()
+    return - (y * np.log(x) + (1.0 - y) * np.log(1.0 - x)).mean()
 
 
 def crossentropy_prime(x, y):
-    return -y / x + (1 - y) / (1 - x)
+    return -y / x + (1.0 - y) / (1.0 - x)
 
 
 def bias(y_real, y_pred):
