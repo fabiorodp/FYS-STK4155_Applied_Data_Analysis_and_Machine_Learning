@@ -107,8 +107,8 @@ gs.run(X_train=X_train, X_test=X_test, y_train=z_train, y_test=z_test,
        decays=decays, gammas=gammas, plot_results=True, verbose=True)
 
 # ################################################## tuning gamma
-gammas = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-lmbd, decay, epochs, batch_size, eta0 = 0, 0.01, 5000, 10, 0.005
+gammas = [0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7]
+lmbd, decay, epochs, batch_size, eta0 = 0, 0.0001, 5000, 10, 0.01
 testing_mse = []
 
 for gamma in gammas:
@@ -120,7 +120,7 @@ for gamma in gammas:
     testing_mse.append(mse(y_true=z_test, y_hat=y_hat))
 
 df = pd.DataFrame(testing_mse, columns=['With Momentum gamma'])
-df['Bench-marked score from before'] = [3.4 for _ in testing_mse]
+df['Bench-marked score from before'] = [3.33 for _ in testing_mse]
 df.index = gammas
 sns.lineplot(data=df)
 plt.xlabel(f'Gammas ($\gamma$)')
@@ -130,8 +130,8 @@ plt.legend()
 plt.show()
 
 # ################################################## tuning regularization l2
-lambdas = [10**-10, 10**-9, 10**-8, 10**-7, 10**-6, 10**-5]
-gamma, decay, epochs, batch_size, eta0 = 0.7, 0, 5000, 10, 0.005
+lambdas = [10**-6, 10**-5, 10**-4, 10**-3]
+gamma, decay, epochs, batch_size, eta0 = 0, 0.0001, 5000, 10, 0.01
 testing_mse = []
 
 for lmbd in lambdas:
