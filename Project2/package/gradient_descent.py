@@ -182,12 +182,12 @@ class MiniSGDM(BGDM):
         """
         sample_space, feature_space = X.shape[0], X.shape[1]
         self.coef_ = np.random.randn(feature_space, 1)
-        batch_space = sample_space // self.batch_size
+        batch_space = int(sample_space / self.batch_size)
 
         for epoch in range(self.epochs):
             for _ in range(batch_space):
                 batch_idxs = np.random.choice(sample_space,
-                                              self.batch_size,
+                                              int(self.batch_size),
                                               replace=False)
 
                 xi, zi = X[batch_idxs], z[batch_idxs]
