@@ -13,47 +13,47 @@ A module to implement the activation functions.
 import numpy as np
 
 
-def identity(z):
+def identity(y_hat):
     r"""Identity function."""
-    return z
+    return y_hat
 
 
-def identity_prime(z):
+def identity_prime(y_hat):
     r"""Derivative of the identity function."""
-    return np.ones(z.shape)
+    return np.ones(y_hat.shape)
 
 
-def sigmoid(z):
+def sigmoid(y_hat):
     r"""The sigmoid function."""
-    return 1.0 / (1.0 + np.exp(-z))
+    return 1.0 / (1.0 + np.exp(-y_hat))
 
 
-def sigmoid_prime(z):
+def sigmoid_prime(y_hat):
     r"""Derivative of the sigmoid function."""
-    return sigmoid(z) * (1 - sigmoid(z))
+    return sigmoid(y_hat) * (1.0 - sigmoid(y_hat))
 
 
-def tanh(z):
+def tanh(y_hat):
     r"""The tanh function."""
-    return np.tanh(z)
+    return np.tanh(y_hat)
 
 
-def tanh_prime(z):
+def tanh_prime(y_hat):
     r"""Derivative of the tanh function."""
-    return 1 - tanh(z) ** 2
+    return 1.0 - tanh(y_hat) ** 2
 
 
-def relu(z):
+def relu(y_hat):
     r"""The ReLu function."""
-    return (z >= 0) * z
+    return (y_hat >= 0) * y_hat
 
 
-def relu_prime(z):
+def relu_prime(y_hat):
     r"""Derivative of the ReLu function."""
-    return 1. * (z >= 0)
+    return 1.0 * (y_hat >= 0)
 
 
-def softmax(z):
+def softmax(y_hat):
     r"""The softmax function."""
-    exp_term = np.exp(z)
+    exp_term = np.exp(y_hat)
     return exp_term / exp_term.sum(axis=1, keepdims=True)

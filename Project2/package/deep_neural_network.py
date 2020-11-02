@@ -3,13 +3,6 @@
 # Author: Fabio Rodrigues Pereira
 # E-mail: fabior@uio.no
 
-"""
-deep_neural_network.py
-~~~~~~~~~~
-
-A module to implement a deep neural network so-called Multi-layer
-perceptron MLP.
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,24 +12,13 @@ from Project2.package.activation_functions import tanh, tanh_prime
 from Project2.package.activation_functions import relu, relu_prime
 from Project2.package.activation_functions import softmax
 from Project2.package.cost_functions import mse, mse_prime
-from Project2.package.cost_functions import accuracy_score, crossentropy
+from Project2.package.cost_functions import crossentropy, crossentropy_prime
+from Project2.package.cost_functions import accuracy_score
 
 
 class MLP:
-    """Multi-layer Perceptron."""
-
-    @staticmethod
-    def set_learning_rate(learning_rate):
-        """
-        Setting a learning rates algorithms.
-
-        :param learning_rate: string: The name of the learning rate.
-        """
-        if learning_rate == 'constant':
-            return learning_rate
-
-        else:
-            raise ValueError("Error: Learning rate not implemented.")
+    """A module to implement a deep neural network so-called multi-layer
+    perceptron (MLP)."""
 
     @staticmethod
     def set_act_function(act_function):
@@ -77,16 +59,17 @@ class MLP:
             return mse, mse_prime
 
         elif cost_function == 'crossentropy':
-            return crossentropy
+            return crossentropy, crossentropy_prime
 
         else:
             raise ValueError("Error: Output activation function not "
                              "implemented.")
 
-    def __init__(self, lmbd=0.0, bias=0.1, hidden_layers=[50, 10, 5, 5],
-                 batch_size=15, eta=0.01, epochs=1000,
-                 act_function='sigmoid', out_act_function='identity',
-                 cost_function='mse', random_state=None):
+    def __init__(self, hidden_layer_sizes=[50], epochs=1000, batch_size=100,
+                 eta0=0.01, learning_rate='constant', decay=0.0, lmbd=0.0,
+                 bias0=0.01, init_weights='xavier', act_function='sigmoid',
+                 output_act_function='identity', cost_function='mse',
+                 random_state=None, verbose=False):
         """
         Constructor of the class.
 
@@ -101,7 +84,7 @@ class MLP:
                                     first hidden layer containing 5 and
                                     second 4 neurons.
         :param batch_size: int: Number of mini-batches.
-        :param eta: float: Learning rate.
+        :param eta0: float: Learning rate.
         :param epochs: int: Number of interactions.
         :param act_function: str: Activation function name for the hidden
                                   layers.
@@ -117,167 +100,165 @@ class MLP:
         The first layer is assumed to be an input layer, and has not any
         biases for those neurons.
         """
-
-        self.lmbd = lmbd
-        self.bias = bias
-        self.hidden_layers = hidden_layers
-        self.batch_size = batch_size
-        self.eta = eta
-        self.epochs = epochs
-        self.costs = np.empty(epochs)
-        self.act_function, self.act_function_prime = \
-            self.set_act_function(act_function)
-        self.out_act_function, self.out_act_function_prime = \
-            self.set_act_function(out_act_function)
-        self.cost_function, self.cost_function_prime = \
-            self.set_cost_function(cost_function)
-        self.random_state = random_state
-
-        if self.random_state is not None:
+        if random_state is not None:
             np.random.seed(random_state)
 
-        self.act, self.net_input = [None], [None]
-        self.weights, self.biases = [None], [None]
+        self.random_state = random_state
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.epochs = epochs
+        self.costs = np.zeros(self.epochs)
+        self.batch_size = batch_size
+        self.eta0 = eta0 / batch_size
+        self.decay = decay
+        self.learning_rate = learning_rate
+        self.lmbd = lmbd
+        self.bias0 = bias0
+        self.init_weights = init_weights
+        self.verbose = verbose
 
-    def _initialize_parameters(self, feature_space, labels_space):
-        """Function to initialize parameters for MLP."""
-        for idx, n_neurons in enumerate(self.hidden_layers):
-            if idx == 0:
-                self.weights.append(np.random.randn(feature_space, n_neurons))
-                self.biases.append(np.zeros((1, n_neurons)) + self.bias)
+        # setting activation function for hidden layers
+        self.act_function, self.act_function_prime = \
+            self.set_act_function(act_function)
 
-            elif 0 < idx <= len(self.hidden_layers):
-                self.weights.append(np.random.randn(
-                    self.hidden_layers[idx - 1], n_neurons))
-                self.biases.append(np.zeros((1, n_neurons)) + self.bias)
+        # setting activation function for output layers
+        self.output_act_function, self.output_act_func_prime = \
+            self.set_act_function(output_act_function)
 
-            self.act.append(None)
+        # setting cost function
+        self.cost_function, self.cost_function_prime = \
+            self.set_cost_function(cost_function)
+
+        # parameters for each layer
+        self.weights, self.biases, self.a, self.net_input, self.delta = \
+            [None], [None], [None], [None], [None]
+
+    def _eta(self, epoch):
+        """Update learning rates (etas values) for every epoch."""
+        eta = self.eta0 * (1.0 / (1.0 + self.decay * epoch))
+        return eta
+
+    def _initialize(self, X, y):
+        self.n_inputs, self.n_features = X.shape
+        self.n_categories = y.shape[1]
+        self.n_batches = self.n_inputs // self.batch_size
+        self.layers = ([self.n_features] + self.hidden_layer_sizes +
+                       [self.n_categories])
+        self.n_layers = len(self.layers)
+        self.n_iterations = self.n_inputs // self.batch_size
+
+        for l in range(1, self.n_layers):
+            # Initializing weights using std normal distribution
+            if self.init_weights == 'normal':
+                self.weights.append(
+                    np.random.randn(self.layers[l - 1], self.layers[l]))
+
+            # Initializing weights using xavier method
+            elif self.init_weights == 'xavier':
+                self.weights.append(
+                    np.random.normal(
+                        loc=0.0,
+                        scale=np.sqrt(
+                            2. / (self.layers[l - 1] + self.layers[l])),
+                        size=(self.layers[l - 1], self.layers[l])))
+
+            self.biases.append(np.zeros(self.layers[l]) + self.bias0)
             self.net_input.append(None)
+            self.a.append(None)
+            self.delta.append(None)
 
-        for idx in range(1, labels_space+1):
-            self.weights.append(np.random.randn(self.hidden_layers[-1], idx))
-            self.biases.append(np.zeros((1, labels_space)) + self.bias)
+    def _feed_forward(self, Xi):
+        self.a[0] = Xi
+        for l in range(1, self.n_layers):
+            self.net_input[l] = \
+                self.a[l - 1] @ self.weights[l] + self.biases[l]
 
-            self.act.append(None)
-            self.net_input.append(None)
+            self.a[l] = self.act_function(y_hat=self.net_input[l])
 
-    def _feed_forward(self, X_mini_batch):
-        """Function to apply feed-forward."""
-        self.act[0] = X_mini_batch
-
-        for step in range(len(self.act)):
-            if 0 <= step < len(self.act)-2:
-                self.net_input[step+1] = \
-                    self.act[step] @ self.weights[step+1] \
-                    + self.biases[step+1]
-
-                self.act[step+1] = self.act_function(self.net_input[step+1])
-
-            elif step == len(self.act)-2:
-                self.net_input[step+1] = \
-                    self.act[step] @ self.weights[step+1] \
-                    + self.biases[step+1]
-
-                self.act[step+1] = \
-                    self.out_act_function(self.net_input[step+1])
-
-    def _back_propagation(self, epoch, z_mini_batch):
-        deltas = [None for _ in range(len(self.weights))]
-        for step in range(1, len(self.weights)):
-
-            if step == 1:
-                # calculating the total cost/loss/error
-                self.costs[epoch] = self.cost_function(
-                    y_true=z_mini_batch, y_hat=self.act[-step])
-
-                # calculating the partial derivatives
-                # for cost, act.func and net_input
-                cost_prime = self.cost_function_prime(
-                    y_true=z_mini_batch, y_hat=self.act[-step])
-                act_func_prime = self.out_act_function_prime(
-                    self.net_input[-step])
-                net_input_prime_w = self.act[-(step+1)].T
-                net_input_prime_b = cost_prime * act_func_prime
-
-                # calculating the gradients
-                # for weight and bias
-                w_gradient = net_input_prime_w @ (cost_prime * act_func_prime)
-                b_gradient = np.sum(net_input_prime_b, axis=0)
-
-                # calculating the regularization "l2"
-                if self.lmbd > 0.0:
-                    w_gradient += self.lmbd * self.weights[-step]
-
-                # updating weight and bias
-                self.weights[-step] -= self.eta * w_gradient
-                self.biases[-step] -= self.eta * b_gradient
-
-                # saving delta for next step
-                deltas[-step] = cost_prime * act_func_prime
-
-            else:
-                # calculating the partial derivatives
-                cost_prime = deltas[-(step-1)] @ self.weights[-(step-1)].T
-                act_func_prime = self.act_function_prime(
-                    self.net_input[-step])
-                net_input_prime_w = self.act[-(step+1)].T
-                net_input_prime_b = cost_prime * act_func_prime
-
-                # calculating the gradient
-                w_gradient = net_input_prime_w @ (cost_prime * act_func_prime)
-                b_gradient = np.sum(net_input_prime_b, axis=0)
-
-                # calculating the regularization "l2"
-                if self.lmbd > 0.0:
-                    w_gradient += self.lmbd * self.weights[-step]
-
-                # updating weights and biases
-                self.weights[-step] -= self.eta * w_gradient
-                self.biases[-step] -= self.eta * b_gradient
-
-                # saving delta for next step
-                deltas[-step] = cost_prime * act_func_prime
-
-    def fit(self, X, z, plot_costs=False):
-        sample_space, feature_space = X.shape[0], X.shape[1]
-        labels_space = z.shape[1]
-        batch_space = sample_space // self.batch_size
-
-        self._initialize_parameters(feature_space, labels_space)
-
-        for epoch in range(self.epochs):
-            for _ in range(batch_space):
-                batch_idxs = np.random.choice(sample_space,
-                                              self.batch_size,
-                                              replace=False)
-
-                # ############################## mini-batches training
-                X_mini_batch, z_mini_batch = X[batch_idxs], z[batch_idxs]
-
-                # ############################## feed-forward
-                self._feed_forward(X_mini_batch)
-
-                # ############################## back-propagation
-                self._back_propagation(epoch, z_mini_batch)
-
-            print(f'Epoch {epoch + 1}/{self.epochs}  |   '
-                  f'Total Error: {self.costs[epoch]}', end='\r')
-
-        if plot_costs is True:
-            plt.plot(np.arange(self.epochs), self.costs)
-            plt.tight_layout()
-            plt.show()
+        # Overwriting last output with the chosen output function
+        self.a[-1] = self.output_act_function(self.net_input[-1])
 
     def _feed_forward_out(self, X):
-        # a = X
-        # for l in range(1, self.n_layers):
-        #     z = a @ self.weights[l] + self.biases[l]
-        #     a = self.act_func(z)
-        #
-        # # Overwriting output with chosen output function
-        # a = self.output_func(z)
-        # return a
-        pass
+        a, net_input = X, None
+        for l in range(1, self.n_layers):
+            net_input = a @ self.weights[l] + self.biases[l]
+            a = self.act_function(y_hat=net_input)
+
+        a = self.output_act_function(y_hat=net_input)
+        return a
+
+    def _backpropagation(self, yi):
+        self.cost = self.cost_function(y_hat=self.a[-1],
+                                       y_true=yi)
+
+        self.delta[-1] = self.cost_function_prime(y_hat=self.a[-1],
+                                                  y_true=yi)
+
+        # computing gradients for weight and biases
+        dw = self.a[-2].T @ self.delta[-1]
+        db = np.sum(self.delta[-1], axis=0)
+
+        # 'l2' ridge regularization
+        if self.lmbd > 0.0:
+            dw += self.lmbd * self.weights[-1]
+
+        # updating weights and biases
+        self.weights[-1] -= self.eta0 * dw
+        self.biases[-1] -= self.eta0 * db
+
+        for l in range(self.n_layers - 2, 0, -1):
+            self.delta[l] = (self.delta[l + 1] @ self.weights[l + 1].T *
+                             self.act_function_prime(y_hat=self.net_input[l]))
+
+            # weights' gradient for hidden layers
+            dw = self.a[l - 1].T @ self.delta[l]
+
+            # 'l2' ridge regularization
+            if self.lmbd > 0.0:
+                dw += self.lmbd * self.weights[l]
+
+            # update weights and biases
+            self.weights[l] -= self.eta0 * dw
+            self.biases[l] -= self.eta0 * np.sum(self.delta[l], axis=0)
+
+    def fit(self, X, y, plot_costs=False):
+        # initializing parameters
+        self._initialize(X, y)
+
+        # each interaction/epoch
+        for epoch in range(self.epochs):
+            j = 0
+            idxs = np.arange(self.n_inputs)
+            np.random.shuffle(idxs)
+
+            # computing eta decay for every epoch
+            if self.learning_rate == 'decay':
+                self.eta0 = self._eta(epoch) / self.n_batches
+
+            # Stochastically Mini-batches
+            for batch in range(self.n_batches):
+                rand_idxs = \
+                    idxs[j * self.batch_size:(j + 1) * self.batch_size]
+                Xi, yi = X[rand_idxs, :], y[rand_idxs]
+                self._feed_forward(Xi)
+                self._backpropagation(yi)
+                j += 1
+
+            # saving accuracy scores
+            self.costs[epoch] = self.cost
+
+            # printing accuracy of each epoch
+            if self.verbose is True:
+                print(f'Epoch {epoch + 1} of {self.epochs}   |   '
+                      f'Accuracy loss: {self.cost}')
+
+        # plotting accuracy scores for each epoch
+        if plot_costs is True:
+            plt.plot(np.arange(self.epochs), self.costs)
+            plt.title("Epochs x Accuracy score")
+            plt.xlabel("Epoch numbers")
+            plt.ylabel("Accuracy scores")
+            plt.tight_layout()
+            plt.show()
 
     def predict_class(self, X):
         output = self._feed_forward_out(X)
