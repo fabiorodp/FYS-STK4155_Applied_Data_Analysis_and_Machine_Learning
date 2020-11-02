@@ -3,23 +3,17 @@
 # Author: Fabio Rodrigues Pereira
 # E-mail: fabior@uio.no
 
-"""
-partA.py
-~~~~~~~~~~
-
-A script to perform the exercise Part A of Project 2.
-"""
-
 import pandas as pd
 from Project1.package.create_dataset import CreateData
 from Project1.package.linear_models import OLS, Ridge
-from Project2.package.cost_functions import mse
+from Project2.package.metrics import mse
 from Project2.package.gradient_descent import MiniSGDM
 from Project2.package.grid_search import GridSearch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 
 # ################################################## re-cap Project 1
 # ################################################## best OLS and Ridge
