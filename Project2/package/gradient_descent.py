@@ -39,8 +39,8 @@ class BGDM:
             np.random.seed(random_state)
 
         self.epochs = epochs
-        self.etas = []
         self.eta0 = eta0
+        self.etas = []
         self.decay = decay
         self.lambda_ = lambda_
         self.regularization = regularization
@@ -71,8 +71,8 @@ class BGDM:
 
             # calculating momentum, learning rate and updating weights
             if 0.0 <= self.gamma <= 1.0:
-                self.velocity = (self.gamma * self.velocity) + \
-                                (self.eta(epoch) * gradients)
+                self.velocity = self.gamma * self.velocity + \
+                                self.eta(epoch) * gradients
                 self.coef_ -= self.velocity
 
             else:
@@ -202,9 +202,22 @@ class MiniSGDM(BGDM):
 
                 # calculating momentum, learning rate and updating weights
                 if 0.0 <= self.gamma <= 1.0:
-                    self.velocity = self.gamma * self.velocity + \
-                                    self.eta0 * gradients
-                    self.coef_ -= self.velocity
+                    if self.decay == 0:
+                        self.velocity = self.gamma * self.velocity + \
+                                        self.eta0 * gradients
+
+                        self.coef_ -= self.velocity
+
+                    elif 0.0 < self.decay <= 1.0:
+                        self.velocity = self.gamma * self.velocity + \
+                                        self.eta(epoch) / batch_space * \
+                                        gradients
+
+                        self.coef_ -= self.velocity
+
+                    else:
+                        raise ValueError(
+                            "Decay's value must be: 0 <= decay <= 1.")
 
                 else:
                     raise ValueError(

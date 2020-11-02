@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
 
-def terrain_data(file='data/SRTM_data_Norway_1.tif', slice_size=20,
+def terrain_data(file='data/SRTM_data_Norway_1.tif', slice_size=15,
                  test_size=0.2, shuffle=True, stratify=None, scale_X=True,
                  scale_z=False, random_state=None):
     """Module to import the GeoTIF terrain data."""

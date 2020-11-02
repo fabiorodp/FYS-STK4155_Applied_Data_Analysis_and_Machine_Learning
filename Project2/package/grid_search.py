@@ -66,33 +66,28 @@ class GridSearch:
                  r2_test_value, mse_test_value, elapsed):
 
         if params == 'ETASxLAMBDAS':
-            print(f'Eta and Lambda: {p1}, {p2}.')
+            print(f'Eta: {p1}   |   Lambda: {p2}')
 
         elif params == 'ETASxEPOCHS':
-            print(f'Eta and Epochs: {p1}, {p2}.')
+            print(f'Eta {p1}    |   Epochs: {p2}')
 
         elif params == 'ETASxBATCHES':
-            print(f'Eta and Batch size: {p1}, {p2}.')
+            print(f'Eta {p1}    |   Batch size:{p2}')
 
         elif params == 'ETASxDECAYS':
-            print(f'Eta and decay: {p1}, {p2}.')
+            print(f'Eta {p1}    |   Decay: {p2}')
 
         elif params == 'ETASxGAMMAS':
-            print(f'Eta and gamma: {p1}, {p2}.')
+            print(f'Eta {p1}    |   Gamma:{p2}')
 
-        print(f'Training R2 and MSE: '
-              f'{r2_train_value}, {mse_train_value}.')
-
-        print(f'Testing R2 and MSE: '
-              f'{r2_test_value}, {mse_test_value}.')
-
+        print(f'R2 train: {r2_train_value}  |   MSE Train: {mse_train_value}')
+        print(f'R2 test: {r2_test_value}    |   MSE test: {mse_test_value}')
         print(f'Time elapsed for training {elapsed} s.')
 
-    def __init__(self, model, params='ETASxEPOCHS', random_state=None):
+    def __init__(self, params='ETASxEPOCHS', random_state=None):
         """
         Constructor for the class.
 
-        :param model: class: Regression model.
         :param params: string: Parameter for the Grid-Search study.
         :param random_state: int: Seed for the experiment.
         """
@@ -100,17 +95,17 @@ class GridSearch:
         if random_state is not None:
             np.random.seed(random_state)
 
-        self.model = model
+        self.models = None
         self.params = params
         self.random_state = random_state
 
-    def run(self, X_train, X_test, y_train, y_test, epochs, etas,
+    def run(self, X_train, X_test, y_train, y_test, model, epochs, etas,
             batch_sizes, lambdas, decays, gammas, plot_results=False,
             verbose=False):
         """
         Run the experiment to search the best parameters.
         """
-        param1, param2 = None, None
+        param1, param2, md = None, None, None
 
         if self.params == 'ETASxLAMBDAS':
             param1, param2 = etas, lambdas
@@ -132,62 +127,57 @@ class GridSearch:
         r2_train = np.zeros(shape=(len(param2), len(param1)))
         r2_test = np.zeros(shape=(len(param2), len(param1)))
         elapsed = np.zeros(shape=(len(param2), len(param1)))
+        self.models = np.empty(shape=(len(param2), len(param1)), dtype=object)
 
         for c_idx, p1 in enumerate(param1):
             for r_idx, p2 in enumerate(param2):
 
                 # set parameters
                 if self.params == 'ETASxLAMBDAS':
-                    self.model.set_lambda(new_lambda=p2)
-                    self.model.set_eta(new_eta=p1)
-                    self.model.set_decay(new_decay=decays)
-                    self.model.set_epochs(new_epochs=epochs)
-                    self.model.set_batch_size(new_batch_size=batch_sizes)
+                    md = model(
+                        batch_size=batch_sizes, epochs=epochs, eta0=p1,
+                        decay=decays, lambda_=p2, gamma=gammas,
+                        regularization=None, random_state=self.random_state)
 
                 elif self.params == 'ETASxEPOCHS':
-                    self.model.set_epochs(new_epochs=p2)
-                    self.model.set_eta(new_eta=p1)
-                    self.model.set_decay(new_decay=decays)
-                    self.model.set_lambda(new_lambda=lambdas)
-                    self.model.set_batch_size(new_batch_size=batch_sizes)
+                    md = model(
+                        batch_size=batch_sizes, epochs=p2, eta0=p1,
+                        decay=decays, lambda_=lambdas, gamma=gammas,
+                        regularization=None, random_state=self.random_state)
 
                 elif self.params == 'ETASxBATCHES':
-                    self.model.set_epochs(new_epochs=epochs)
-                    self.model.set_eta(new_eta=p1)
-                    self.model.set_decay(new_decay=decays)
-                    self.model.set_lambda(new_lambda=lambdas)
-                    self.model.set_batch_size(new_batch_size=p2)
+                    md = model(
+                        batch_size=p2, epochs=epochs, eta0=p1,
+                        decay=decays, lambda_=lambdas, gamma=gammas,
+                        regularization=None, random_state=self.random_state)
 
                 elif self.params == 'ETASxDECAYS':
-                    self.model.set_epochs(new_epochs=epochs)
-                    self.model.set_eta(new_eta=p1)
-                    self.model.set_decay(new_decay=p2)
-                    self.model.set_lambda(new_lambda=lambdas)
-                    self.model.set_batch_size(new_batch_size=batch_sizes)
+                    md = model(
+                        batch_size=batch_sizes, epochs=epochs, eta0=p1,
+                        decay=p2, lambda_=lambdas, gamma=gammas,
+                        regularization=None, random_state=self.random_state)
 
                 elif self.params == 'ETASxGAMMAS':
-                    self.model.set_epochs(new_epochs=epochs)
-                    self.model.set_eta(new_eta=p1)
-                    self.model.set_decay(new_decay=decays)
-                    self.model.set_lambda(new_lambda=lambdas)
-                    self.model.set_batch_size(new_batch_size=batch_sizes)
-                    self.model.set_gamma(new_gamma=p2)
+                    md = model(
+                        batch_size=batch_sizes, epochs=epochs, eta0=p1,
+                        decay=decays, lambda_=lambdas, gamma=p2,
+                        regularization=None, random_state=self.random_state)
 
                 # train model
                 time0 = time()
-                self.model.fit(X_train, y_train)
+                md.fit(X=X_train, z=y_train)
                 time1 = time()
                 elapsed_value = time1 - time0
                 elapsed[r_idx, c_idx] = elapsed_value
 
                 # assess model
-                y_hat = self.model.predict(X_train)
+                y_hat = md.predict(X=X_train)
                 r2_train_value = r2(y_train, y_hat)
                 r2_train[r_idx, c_idx] = r2_train_value
                 mse_train_value = mse(y_train, y_hat)
                 mse_train[r_idx, c_idx] = mse_train_value
 
-                y_tilde = self.model.predict(X_test)
+                y_tilde = md.predict(X=X_test)
                 r2_test_value = r2(y_test, y_tilde)
                 r2_test[r_idx, c_idx] = r2_test_value
                 mse_test_value = mse(y_test, y_tilde)
@@ -201,10 +191,12 @@ class GridSearch:
                                   mse_test_value=mse_test_value,
                                   elapsed=elapsed_value)
 
+                self.models[r_idx, c_idx] = md
+
         if plot_results is True:
             self._plot_heatmaps(params=self.params, param1=param1,
                                 param2=param2, r2_train=r2_train,
                                 mse_train=mse_train, r2_test=r2_test,
                                 mse_test=mse_test, elapsed=elapsed)
 
-        return r2_train, mse_train, r2_test, mse_test, elapsed
+        return r2_train, mse_train, r2_test, mse_test, elapsed, self.models
