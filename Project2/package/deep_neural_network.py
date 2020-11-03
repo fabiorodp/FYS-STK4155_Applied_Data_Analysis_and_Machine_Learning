@@ -14,6 +14,7 @@ from Project2.package.activation_functions import softmax
 from Project2.package.cost_functions import mse, mse_prime
 from Project2.package.cost_functions import crossentropy, crossentropy_prime
 from Project2.package.cost_functions import accuracy_score
+from Project2.package.cost_functions import accuracy_score_prime
 
 
 class MLP:
@@ -53,7 +54,7 @@ class MLP:
             return softmax
 
         elif cost_function == 'accuracy_score':
-            return accuracy_score
+            return accuracy_score, accuracy_score_prime
 
         elif cost_function == 'mse':
             return mse, mse_prime
@@ -65,7 +66,7 @@ class MLP:
             raise ValueError("Error: Output activation function not "
                              "implemented.")
 
-    def __init__(self, hidden_layer_sizes=[50], epochs=1000, batch_size=100,
+    def __init__(self, hidden_layers=[50], epochs=1000, batch_size=100,
                  eta0=0.01, learning_rate='constant', decay=0.0, lmbd=0.0,
                  bias0=0.01, init_weights='xavier', act_function='sigmoid',
                  output_act_function='identity', cost_function='mse',
@@ -75,36 +76,40 @@ class MLP:
 
         Parameters:
         ~~~~~~~~~~
-        :param lmbd: float: "L2" regularization.
-        :param bias: float: Bias to be added to the weights.
         :param hidden_layers: list: It contains the number of neurons in the
                                     respective hidden layers of the network.
                                     For example, if [5, 4], then it would
                                     be a 2-hidden-layer network, with the
                                     first hidden layer containing 5 and
                                     second 4 neurons.
+        :param epochs: int: Number of interactions.
         :param batch_size: int: Number of mini-batches.
         :param eta0: float: Learning rate.
-        :param epochs: int: Number of interactions.
+        :param learning_rate: str: Type of learning rate that can be
+                                   'constant' or 'decay'.
+        :param decay: float: Eta's decay that is between 0 and 1.
+        :param lmbd: float: "L2" regularization.
+        :param bias0: float: Bias to be added to the weights.
+        :param init_weights: str: The ways of initialization of the weights
+                                  and biases. It can be 'constant' or
+                                  'xavier'.
         :param act_function: str: Activation function name for the hidden
-                                  layers.
-        :param out_act_function: str: Activation function name for output.
-        :param cost_function: str: Cost function name.
+                                  layers. It can be 'identity', 'sigmoid',
+                                  'tanh' or 'relu'.
+        :param output_act_function: str: Activation function name for the
+                                         output layers. It can be 'identity',
+                                         'sigmoid', 'tanh' or 'relu'.
+        :param cost_function: str: Cost function name. It can be 'mse',
+                                   'accuracy_score', 'crossentropy' or
+                                   'softmax'.
         :param random_state: int: The seed for random numbers.
-
-        Notes:
-        ~~~~~~~~~~
-        The biases and weights for the network are initialized randomly,
-        using a Gaussian distribution with mean 0, and variance 1.
-
-        The first layer is assumed to be an input layer, and has not any
-        biases for those neurons.
+        :param verbose: bool: True to print training costs for every epoch.
         """
         if random_state is not None:
             np.random.seed(random_state)
 
         self.random_state = random_state
-        self.hidden_layer_sizes = hidden_layer_sizes
+        self.hidden_layer_sizes = hidden_layers
         self.epochs = epochs
         self.costs = np.zeros(self.epochs)
         self.batch_size = batch_size
@@ -137,7 +142,8 @@ class MLP:
         eta = self.eta0 * (1.0 / (1.0 + self.decay * epoch))
         return eta
 
-    def _initialize(self, X, y):
+    def _init_parameters(self, X, y):
+        """Initialization of parameters."""
         self.n_inputs, self.n_features = X.shape
         self.n_categories = y.shape[1]
         self.n_batches = self.n_inputs // self.batch_size
@@ -166,63 +172,16 @@ class MLP:
             self.a.append(None)
             self.delta.append(None)
 
-    def _feed_forward(self, Xi):
-        self.a[0] = Xi
-        for l in range(1, self.n_layers):
-            self.net_input[l] = \
-                self.a[l - 1] @ self.weights[l] + self.biases[l]
-
-            self.a[l] = self.act_function(y_hat=self.net_input[l])
-
-        # Overwriting last output with the chosen output function
-        self.a[-1] = self.output_act_function(self.net_input[-1])
-
-    def _feed_forward_out(self, X):
-        a, net_input = X, None
-        for l in range(1, self.n_layers):
-            net_input = a @ self.weights[l] + self.biases[l]
-            a = self.act_function(y_hat=net_input)
-
-        a = self.output_act_function(y_hat=net_input)
-        return a
-
-    def _backpropagation(self, yi):
-        self.cost = self.cost_function(y_hat=self.a[-1],
-                                       y_true=yi)
-
-        self.delta[-1] = self.cost_function_prime(y_hat=self.a[-1],
-                                                  y_true=yi)
-
-        # computing gradients for weight and biases
-        dw = self.a[-2].T @ self.delta[-1]
-        db = np.sum(self.delta[-1], axis=0)
-
-        # 'l2' ridge regularization
-        if self.lmbd > 0.0:
-            dw += self.lmbd * self.weights[-1]
-
-        # updating weights and biases
-        self.weights[-1] -= self.eta0 * dw
-        self.biases[-1] -= self.eta0 * db
-
-        for l in range(self.n_layers - 2, 0, -1):
-            self.delta[l] = (self.delta[l + 1] @ self.weights[l + 1].T *
-                             self.act_function_prime(y_hat=self.net_input[l]))
-
-            # weights' gradient for hidden layers
-            dw = self.a[l - 1].T @ self.delta[l]
-
-            # 'l2' ridge regularization
-            if self.lmbd > 0.0:
-                dw += self.lmbd * self.weights[l]
-
-            # update weights and biases
-            self.weights[l] -= self.eta0 * dw
-            self.biases[l] -= self.eta0 * np.sum(self.delta[l], axis=0)
-
     def fit(self, X, y, plot_costs=False):
+        """
+        Class method to feed the model with the training data.
+
+        :param X: ndarray: Explanatory data-set variables.
+        :param y: ndarray: Target or response labeled variables.
+        :param plot_costs: bool: True to line-plot the training costs.
+        """
         # initializing parameters
-        self._initialize(X, y)
+        self._init_parameters(X, y)
 
         # each interaction/epoch
         for epoch in range(self.epochs):
@@ -260,9 +219,68 @@ class MLP:
             plt.tight_layout()
             plt.show()
 
+    def _feed_forward(self, Xi):
+        """Class method to perform feed-forward for training."""
+        self.a[0] = Xi
+        for l in range(1, self.n_layers):
+            self.net_input[l] = \
+                self.a[l - 1] @ self.weights[l] + self.biases[l]
+
+            self.a[l] = self.act_function(y_hat=self.net_input[l])
+
+        # Overwriting last output with the chosen output function
+        self.a[-1] = self.output_act_function(self.net_input[-1])
+
+    def _backpropagation(self, yi):
+        """Class method to perform back-propagation technique."""
+        self.cost = self.cost_function(y_hat=self.a[-1],
+                                       y_true=yi)
+
+        self.delta[-1] = self.cost_function_prime(y_hat=self.a[-1],
+                                                  y_true=yi)
+
+        # computing gradients for weight and biases
+        dw = self.a[-2].T @ self.delta[-1]
+        db = np.sum(self.delta[-1], axis=0)
+
+        # 'l2' ridge regularization
+        if self.lmbd > 0.0:
+            dw += self.lmbd * self.weights[-1]
+
+        # updating weights and biases
+        self.weights[-1] -= self.eta0 * dw
+        self.biases[-1] -= self.eta0 * db
+
+        for l in range(self.n_layers - 2, 0, -1):
+            self.delta[l] = (self.delta[l + 1] @ self.weights[l + 1].T *
+                             self.act_function_prime(y_hat=self.net_input[l]))
+
+            # weights' gradient for hidden layers
+            dw = self.a[l - 1].T @ self.delta[l]
+
+            # 'l2' ridge regularization
+            if self.lmbd > 0.0:
+                dw += self.lmbd * self.weights[l]
+
+            # update weights and biases
+            self.weights[l] -= self.eta0 * dw
+            self.biases[l] -= self.eta0 * np.sum(self.delta[l], axis=0)
+
+    def _feed_forward_out(self, X):
+        """Class method to perform feed-forward for predictions."""
+        a, net_input = X, None
+        for l in range(1, self.n_layers):
+            net_input = a @ self.weights[l] + self.biases[l]
+            a = self.act_function(y_hat=net_input)
+
+        a = self.output_act_function(y_hat=net_input)
+        return a
+
     def predict_class(self, X):
+        """Class method to predict classification targets."""
         output = self._feed_forward_out(X)
         return np.argmax(output, axis=1)
 
     def predict(self, X):
+        """Class method to predict regression targets."""
         return self._feed_forward_out(X)

@@ -20,11 +20,15 @@ def mse(y_true, y_hat):
 
 def mse_prime(y_true, y_hat):
     """Derivative of the MSE function."""
-    return y_hat - y_true
+    return 2.0/len(y_true) * (y_hat - y_true)
 
 
-def accuracy_score(y_real, y_pred):
-    return np.sum(y_real == y_pred) / len(y_real)
+def accuracy_score(y_true, y_hat):
+    return np.sum(y_true == y_hat) / len(y_hat)
+
+
+def accuracy_score_prime(y_true, y_hat):
+    return (y_hat - y_true) / len(y_true)
 
 
 def crossentropy(y_hat, y_true):
