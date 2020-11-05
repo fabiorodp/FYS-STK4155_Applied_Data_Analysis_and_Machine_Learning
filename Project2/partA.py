@@ -8,7 +8,7 @@ from Project1.package.create_dataset import CreateData
 from Project1.package.linear_models import OLS, Ridge
 from Project2.package.metrics import mse
 from Project2.package.gradient_descent import MiniSGDM
-from Project2.package.grid_search import GridSearch
+from Project2.package.studies import SearchParametersMiniSGDM
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -64,7 +64,7 @@ etas = [0.02, 0.01, 0.005, 0.001, 0.0005]
 epochs = [100, 500, 1000, 5000, 10000]
 batch_sizes, gammas, lambdas, decays = 1.0, 0.0, 0.0, 0.0
 
-gs = GridSearch(params='ETASxEPOCHS', random_state=10)
+gs = SearchParametersMiniSGDM(params='ETASxEPOCHS', random_state=10)
 
 r2_train, mse_train, r2_test, mse_test, elapsed, models = \
     gs.run(X_train=X_train, X_test=X_test, y_train=z_train, y_test=z_test,
@@ -89,7 +89,7 @@ etas = [0.01, 0.005, 0.001, 0.0005]
 batch_sizes = [1, 5, 10, 15, 20]
 gammas, lambdas, decays, epochs = 0.0, 0.0, 0.0, 1000
 
-gs = GridSearch(params='ETASxBATCHES', random_state=10)
+gs = SearchParametersMiniSGDM(params='ETASxBATCHES', random_state=10)
 
 r2_train, mse_train, r2_test, mse_test, elapsed, models = \
     gs.run(X_train=X_train, X_test=X_test, y_train=z_train, y_test=z_test,
@@ -113,7 +113,7 @@ etas = [0.35, 0.3, 0.25, 0.2, 0.01]
 decays = [10**-1, 10**-2, 10**-3, 10**-4, 10**-5]
 gammas, lambdas, epochs, batch_sizes = 0.0, 0.0, 1000, 10
 
-gs = GridSearch(params='ETASxDECAYS', random_state=10)
+gs = SearchParametersMiniSGDM(params='ETASxDECAYS', random_state=10)
 
 r2_train, mse_train, r2_test, mse_test, elapsed, models = \
     gs.run(X_train=X_train, X_test=X_test, y_train=z_train, y_test=z_test,
