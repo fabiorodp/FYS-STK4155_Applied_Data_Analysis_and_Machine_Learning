@@ -40,6 +40,9 @@ class MLP:
         elif act_function == 'relu':
             return relu, relu_prime
 
+        elif act_function == 'softmax':
+            return softmax, softmax
+
         else:
             raise ValueError("Error: Activation function not implemented.")
 
@@ -50,10 +53,7 @@ class MLP:
 
         :param cost_function: string: The name of the cost function.
         """
-        if cost_function == 'softmax':
-            return softmax
-
-        elif cost_function == 'accuracy_score':
+        if cost_function == 'accuracy_score':
             return accuracy_score, accuracy_score_prime
 
         elif cost_function == 'mse':
@@ -68,7 +68,7 @@ class MLP:
 
     def __init__(self, hidden_layers=[50], epochs=1000, batch_size=100,
                  eta0=0.01, learning_rate='constant', decay=0.0, lmbd=0.0,
-                 bias0=0.01, init_weights='xavier', act_function='sigmoid',
+                 bias0=0.01, init_weights='normal', act_function='sigmoid',
                  output_act_function='identity', cost_function='mse',
                  random_state=None, verbose=False):
         """
@@ -238,6 +238,8 @@ class MLP:
 
         self.delta[-1] = self.cost_function_prime(y_hat=self.a[-1],
                                                   y_true=yi)
+
+        # self.delta[-1] = self.a[-1] - yi
 
         # computing gradients for weight and biases
         dw = self.a[-2].T @ self.delta[-1]

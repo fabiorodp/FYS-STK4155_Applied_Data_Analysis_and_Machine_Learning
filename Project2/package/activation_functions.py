@@ -56,4 +56,4 @@ def relu_prime(y_hat):
 def softmax(y_hat):
     r"""The softmax function."""
     exp_term = np.exp(y_hat)
-    return exp_term / exp_term.sum(axis=1, keepdims=True)
+    return exp_term / exp_term.sum()  # (axis=1, keepdims=True)
