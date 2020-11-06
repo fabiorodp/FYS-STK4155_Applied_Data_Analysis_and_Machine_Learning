@@ -354,7 +354,7 @@ class SearchParametersDNN:
                 h_layers = [p1]*layers
 
                 if verbose is True:
-                    print(f'Hidden layers: {h_layers}')
+                    print(f'Nr. of Neurons: {p1}    |    Eta: {p2}')
 
                 md = model(
                     hidden_layers=h_layers, epochs=epochs,
