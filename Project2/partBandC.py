@@ -38,7 +38,7 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
            learning_rate='constant', decays=0.0, lmbds=0.0, bias0=0.01,
            init_weights='normal', act_function='sigmoid',
            output_act_function='identity', cost_function='mse',
-           random_state=10, verbose=True, layers=1, neurons=n_neurons,
+           random_state=10, verbose=False, layers=1, neurons=n_neurons,
            hidden_layers=None)
 
     # printing best metric and its localization
@@ -63,29 +63,21 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
                        ylabel='Learning rate $\eta$ values',
                        xlabel='Number of Neurons in each hidden layer')
 
-    # plotting Train MSE x Test MSE for a given eta.
+    # plotting loss-error, Train MSE and Test MSE for a given eta.
+    plt.plot(n_neurons, gs.score[1], "-.", label="Loss-error")
     plt.plot(n_neurons, gs.mse_test[1], "--", label="MSE test")
     plt.plot(n_neurons, gs.mse_train[1], label="MSE train")
     plt.ylabel("MSE scores")
     plt.xlabel("Number of neurons in the hidden-layer.")
-    plt.title("Training MSE and Testing MSE as a function of nr. of neurons")
-    plt.ylim([6, 50])
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    # analysing obtained cost for every epoch
-    plt.plot(np.arange(500), gs.models[(1, 6)].costs)
-    plt.ylabel("Loss (MSE) scores")
-    plt.xlabel("Epochs / Number of interactions")
-    plt.title("Loss (MSE) scores as a function of epochs")
-    plt.legend()
-    plt.grid()
+    plt.title("Loss-error, Training MSE and Testing MSE as a function of nr. "
+              "of neurons")
     plt.ylim([0, 50])
+    plt.legend()
+    plt.grid()
     plt.show()
 
     # analysing batch_size=100
-    md = MLP(hidden_layers=[100], epochs=1000,
+    md = MLP(hidden_layers=[100], epochs=500,
              batch_size=100, eta0=0.9,
              learning_rate='constant', decay=0.0, lmbd=0.0,
              bias0=0.01, init_weights='normal',
@@ -95,8 +87,12 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
     md.fit(X=X_train, y=z_train)
 
     # plotting loss x epochs for batch_size=100
-    plt.plot(np.arange(1000), md.costs)
-    plt.ylabel("Loss (MSE) scores")
+    plt.plot(np.arange(500), md.costs, "-.", label="Batch_size = 100")
+    # batch_size = length of training samples
+    plt.plot(np.arange(500), gs.models[(1, 6)].costs, "--",
+             label="Batch_size = length of training samples")
+
+    plt.ylabel("Cost/Loss (MSE) scores for every training epoch")
     plt.xlabel("Epochs / Number of interactions")
     plt.title("Loss (MSE) scores as a function of epochs")
     plt.legend()
@@ -174,28 +170,33 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
 
     mse_te = []
     mse_tr = []
+    loss_error = []
 
     for d in decays:
-        md = MLP(hidden_layers=[100], epochs=500,
-                 batch_size=len(X_train), eta0=0.9,
-                 learning_rate='decay', decay=d, lmbd=0.0,
-                 bias0=0.01, init_weights='normal',
-                 act_function='sigmoid', output_act_function='identity',
-                 cost_function='mse', random_state=10, verbose=True)
-        md.fit(X=X_train, y=z_train)
-        y_hat = md.predict(X_train)
+        md1 = MLP(hidden_layers=[100], epochs=500,
+                  batch_size=len(X_train), eta0=0.9,
+                  learning_rate='decay', decay=d, lmbd=0.0,
+                  bias0=0.01, init_weights='normal',
+                  act_function='sigmoid', output_act_function='identity',
+                  cost_function='mse', random_state=10, verbose=True)
+
+        md1.fit(X=X_train, y=z_train)
+        y_hat = md1.predict(X_train)
         mse_tr.append(mse(y_true=z_train, y_hat=y_hat))
-        y_tilde = md.predict(X_test)
+        y_tilde = md1.predict(X_test)
         mse_te.append(mse(y_true=z_test, y_hat=y_tilde))
+        loss_error.append(md1.costs[-1])
 
     plt.plot(decays, mse_tr, label='MSE Train')
     plt.plot(decays, mse_te, "--", label='MSE Test')
+    plt.plot(decays, loss_error, "-.", label='Loss-error in the last '
+                                             'training epoch')
     plt.ylabel("MSE scores")
     plt.xlabel("Decay values")
-    plt.title("Training and Testing MSE Vs Decays for $\eta$=0.9")
+    plt.title("Loss-error, Training and Testing MSE Vs Decays for $\eta$=0.9")
     plt.legend()
     plt.grid()
-    plt.ylim([8, 13])
+    plt.ylim([0, 13])
     plt.show()
 
     # searching Eta=0.9 and Decay=0 Vs Lambdas;
@@ -203,25 +204,30 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
 
     mse_te = []
     mse_tr = []
+    loss_error = []
 
     for l in lmbds:
-        md = MLP(hidden_layers=[100], epochs=500,
+        md3 = MLP(hidden_layers=[100], epochs=500,
                  batch_size=len(X_train), eta0=0.9,
                  learning_rate='constant', decay=0.0, lmbd=l,
                  bias0=0.01, init_weights='normal',
                  act_function='sigmoid', output_act_function='identity',
                  cost_function='mse', random_state=10, verbose=True)
-        md.fit(X=X_train, y=z_train)
-        y_hat = md.predict(X_train)
+
+        md3.fit(X=X_train, y=z_train)
+        y_hat = md3.predict(X_train)
         mse_tr.append(mse(y_true=z_train, y_hat=y_hat))
-        y_tilde = md.predict(X_test)
+        y_tilde = md3.predict(X_test)
         mse_te.append(mse(y_true=z_test, y_hat=y_tilde))
+        loss_error.append(md3.costs[-1])
 
     plt.plot(lmbds, mse_tr, label='MSE Train')
     plt.plot(lmbds, mse_te, "--", label='MSE Test')
+    plt.plot(lmbds, loss_error, "-.", label='Loss-error in the last '
+                                             'training epoch')
     plt.ylabel("MSE scores")
     plt.xlabel("Lambdas values")
-    plt.title("Training & Testing MSE Vs Lambdas for $\eta$=0.9 and decay=0")
+    plt.title("Loss_error, Training & Testing MSE Vs Lambdas")
     plt.legend()
     plt.grid()
     plt.show()
