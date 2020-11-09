@@ -10,7 +10,7 @@ from Project2.package.activation_functions import identity, identity_prime
 from Project2.package.activation_functions import sigmoid, sigmoid_prime
 from Project2.package.activation_functions import tanh, tanh_prime
 from Project2.package.activation_functions import relu, relu_prime
-from Project2.package.activation_functions import softmax
+from Project2.package.activation_functions import softmax, softmax_prime
 from Project2.package.cost_functions import mse, mse_prime
 from Project2.package.cost_functions import crossentropy, crossentropy_prime
 from Project2.package.cost_functions import accuracy_score
@@ -41,7 +41,7 @@ class MLP:
             return relu, relu_prime
 
         elif act_function == 'softmax':
-            return softmax, softmax
+            return softmax, softmax_prime
 
         else:
             raise ValueError("Error: Activation function not implemented.")

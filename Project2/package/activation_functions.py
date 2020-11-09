@@ -57,3 +57,8 @@ def softmax(y_hat):
     r"""The softmax function."""
     exp_term = np.exp(y_hat)
     return exp_term / exp_term.sum()  # (axis=1, keepdims=True)
+
+
+def softmax_prime(y_hat):
+    r"""The softmax function."""
+    return softmax(y_hat) * (1.0 - softmax(y_hat))
