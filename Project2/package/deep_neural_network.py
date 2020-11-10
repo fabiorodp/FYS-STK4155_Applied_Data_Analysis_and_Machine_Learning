@@ -120,6 +120,7 @@ class MLP:
         self.bias0 = bias0
         self.init_weights = init_weights
         self.verbose = verbose
+        self.a_funct = act_function
 
         # setting activation function for hidden layers
         self.act_function, self.act_function_prime = \
@@ -160,12 +161,27 @@ class MLP:
 
             # Initializing weights using xavier method
             elif self.init_weights == 'xavier':
-                self.weights.append(
-                    np.random.normal(
-                        loc=0.0,
-                        scale=np.sqrt(
-                            2. / (self.layers[l - 1] + self.layers[l])),
-                        size=(self.layers[l - 1], self.layers[l])))
+
+                if self.a_funct == 'sigmoid':
+                    self.weights.append(
+                        np.random.normal(
+                            loc=0.0, scale=np.sqrt(2. / (self.layers[l - 1]
+                                                         + self.layers[l])),
+                            size=(self.layers[l - 1], self.layers[l])))
+
+                elif self.a_funct == 'tanh':
+                    self.weights.append(
+                        np.random.normal(
+                            loc=0.0, scale=4*np.sqrt(2. / (self.layers[l - 1]
+                                                         + self.layers[l])),
+                            size=(self.layers[l - 1], self.layers[l])))
+
+                elif self.a_funct == 'relu':
+                    self.weights.append(
+                        np.random.normal(
+                            loc=0.0, scale=np.sqrt(2)*np.sqrt(2. / (
+                                    self.layers[l - 1] + self.layers[l])),
+                            size=(self.layers[l - 1], self.layers[l])))
 
             self.biases.append(np.zeros(self.layers[l]) + self.bias0)
             self.net_input.append(None)

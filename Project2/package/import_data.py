@@ -139,5 +139,6 @@ def scale_data(train_data, test_data, scaler='standard'):
 
     return train_data, test_data
 
+
 if __name__ == '__main__':
     pass
