@@ -24,9 +24,7 @@ models = [OLS(random_state=10), Ridge(lambda_=0.0001, random_state=10)]
 
 for d, l, model in zip(degree, labels, models):
     cd = CreateData(random_state=10)
-    X, z = cd.fit(nr_samples=15,
-                  degree=d,
-                  terrain_file='data/SRTM_data_Norway_1.tif')
+    X, z = cd.fit(nr_samples=15, degree=d, terrain_file=terrain_file)
 
     # splitting data
     X_train, X_test, z_train, z_test = train_test_split(
@@ -51,9 +49,7 @@ for d, l, model in zip(degree, labels, models):
 # ################################## pre-processing GeoTIF Image
 # ################################## for SGD and Mini-SGDM
 cd = CreateData(random_state=10)
-X, z = cd.fit(nr_samples=15,
-              degree=10,
-              terrain_file='data/SRTM_data_Norway_1.tif')
+X, z = cd.fit(nr_samples=15, degree=10, terrain_file=terrain_file)
 
 # splitting data
 X_train, X_test, z_train, z_test = train_test_split(
