@@ -38,7 +38,7 @@ def one_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
            learning_rate='constant', decays=0.0, lmbds=0.0, bias0=0.01,
            init_weights='normal', act_function='sigmoid',
            output_act_function='identity', cost_function='mse',
-           random_state=10, verbose=False, layers=1, neurons=n_neurons,
+           random_state=10, verbose=True, layers=1, neurons=n_neurons,
            hidden_layers=None)
 
     # printing best metric and its localization
@@ -241,8 +241,8 @@ def two_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
         3. Plotting heat-maps for different metrics;
         4. Plotting Train MSE x Test MSE for a given eta;
         5. Tuning eta x decay and lambda;
-        6. Tuning Eta=0.08 Vs Decays;
-        7. Tuning Eta=0.08 and Decay=0 Vs Lambdas;
+        6. Tuning Eta Vs Decays;
+        7. Tuning Eta and Decay Vs Lambdas;
     """
     n_neurons = [5, 10, 20, 50, 100, 150, 200, 300, 400, 500]
     etas = [0.1, 0.09, 0.08, 0.05]
@@ -251,7 +251,7 @@ def two_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
 
     # searching best parameters for 'NEURONSxETAS'
     gs.run(X_train=X_train, X_test=X_test, z_train=z_train, z_test=z_test,
-           model=MLP, epochs=1000, batch_size=len(X_train), etas=etas,
+           model=MLP, epochs=500, batch_size=len(X_train), etas=etas,
            learning_rate='constant', decays=0.0, lmbds=0.0, bias0=0.01,
            init_weights='normal', act_function='sigmoid',
            output_act_function='identity', cost_function='mse',
@@ -271,7 +271,7 @@ def two_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
              "Testing R2-Score X (Neurons x Etas) for 2 hidden-layer",
              "Training MSE-Score X (Neurons x Etas) for 2 hidden-layer",
              "Testing MSE-Score X (Neurons x Etas) for 2 hidden-layer",
-             "Last loss-Error (MSE) obtained by the training for 2 hidden-layer",
+             "Last loss-Error (MSE) obtained by training for 2 hidden-layer",
              "Elapsed time for training in seconds for 2 hidden-layer"]
 
     for h, t in zip(heat_maps, title):
@@ -305,7 +305,7 @@ def two_hidden_layer_sigmoid(X_train, X_test, z_train, z_test):
     # plotting loss x epochs for batch_size=100
     plt.plot(np.arange(500), md.costs, "-.", label="Batch_size = 100")
     # batch_size = length of training samples
-    plt.plot(np.arange(500), gs.models[(1, 6)].costs, "--",
+    plt.plot(np.arange(500), gs.models[(2, 9)].costs, "--",
              label="Batch_size = length of training samples")
 
     plt.ylabel("Cost/Loss (MSE) scores for every training epoch")
@@ -416,8 +416,8 @@ def two_hidden_layer_tanh(X_train, X_test, z_train, z_test):
         3. Plotting heat-maps for different metrics;
         4. Plotting Train MSE x Test MSE for a given eta;
         5. Tuning eta x decay and lambda;
-        6. Tuning Eta=0.05 Vs Decays;
-        7. Tuning Eta=0.05 and Decay=0 Vs Lambdas;
+        6. Tuning Eta Vs Decays;
+        7. Tuning Eta and Decay Vs Lambdas;
     """
     n_neurons = [5, 10, 25, 50, 100, 150, 200, 300, 400, 500]
     etas = [0.3, 0.1, 0.07, 0.05, 0.04, 0.03, 0.02, 0.01]
@@ -914,7 +914,7 @@ def two_hidden_layer_sigmoid_xavier(X_train, X_test, z_train, z_test):
 if __name__ == '__main__':
     # ########## Importing data
     X_train, X_test, z_train, z_test = \
-        terrain_data(file='Project2/data/SRTM_data_Norway_1.tif',
+        terrain_data(file='data/SRTM_data_Norway_1.tif',
                      slice_size=15, test_size=0.2, shuffle=True,
                      stratify=None, scale_X=True,
                      scale_z=False, random_state=10)
