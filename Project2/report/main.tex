@@ -12,14 +12,14 @@
 \usepackage{makeidx}
 \makeindex
 
-\title{UiO - FYS-STK4155: PROJECT 2: NRR}
+\title{UiO - FYS-STK4155: PROJECT 2: Deep Neural Networks for Regression and Classification cases}
 \author{\textbf{Fábio Rodrigues Pereira} \\ \small fabior@uio.no - github: @fabiorod}
-\date{November 2020}
+\date{November 13, 2020}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-\noindent lalalalalalalala
+\noindent This project aims to study many different Gradient Descent (GD), Momentum Gradient Descent (GDM), Stochastic Gradient Descent (SGD), Mini-batch Stochastic Gradient Descent (Mini-SGD), Mini-batch Momentum Stochastic Gradient Descent (Mini-SGDM), Neural Network (NN), and Deep Neural Networks (DNN) techniques applied on a GeoTIF terrain data containing region heights from a place near Stavanger in Norway. We are interested in predicting this region's measurements and finding a model that would overcome the accuracy metrics obtained from traditional methods as Ordinary least squares (OLS) and Ridge regression (RIDGE). From project 1, the best testing Mean Squared Error (MSE) achieved for OLS and RIDGE, respectively, was 1.11 and 1.44. In this project 2, we go through all parameters for the models above, like the number of hidden layers, the number of neurons, activation functions, cost functions, weights initialization methods, Learning Rate ($\eta$), decay, lambda 'l2' regularization, batch size, epochs, training elapsed time, and see that the best testing MSE score achieved for an SGD was 2.99 and for a DNN was 7.46. These scores do not perform equally well as the more traditional regression methods, but some practical benefits are considered, as the unnecessary design matrix to feed the DNN models and more efficient/lower training/learning time systems.
 \end{abstract}
 
 \clearpage
@@ -51,10 +51,5 @@
 \thispagestyle{empty}
 
 \import{./}{bibliography.tex}
-
-\clearpage
-\thispagestyle{empty}
-
-\import{./}{appendix.tex}
 
 \end{document}
