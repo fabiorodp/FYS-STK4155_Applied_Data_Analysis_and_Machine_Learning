@@ -255,7 +255,8 @@ def classification_study(X_train, X_test, y_train, y_test, y_train_encoded,
 
 
 if __name__ == '__main__':
-    # MNIST data-set
+    # ##############################
+    # ############################## MNIST data-set
     X_train, X_test, y_train, y_test, y_train_encoded, y_test_encoded = \
         MNIST(test_size=0.2, shuffle=True, stratify=None, scale_X=True,
               verbose=False, plot=False, random_state=10)
@@ -330,20 +331,21 @@ if __name__ == '__main__':
                          act_function=act_function,
                          cost_function=cost_function)
 
-    # Brest Cancer data-set
+    # ##############################
+    # ############################## Brest Cancer data-set
     X_train, X_test, y_train, y_test, y_train_encoded, y_test_encoded = \
         breast_cancer(test_size=0.2, shuffle=True, stratify=None,
                       scale_X=True, random_state=10)
 
     # studying 1 hidden layer, softmax, accuracy_score, Brest Cancer data-set
     n_layers = 1
-    n_neurons = [5, 10, 50, 100, 200, 300, 400, 500]
-    etas = [0.2, 0.1, 0.09, 0.05, 0.01]
-    epochs = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
-    lmbds = [0, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3, 10 ** -1, 0.5]
+    n_neurons = [1, 2, 3, 4, 5]
+    etas = [2.0, 1.0, 0.5, 0.1]
+    epochs = [5, 6, 7, 8, 9, 10]
+    lmbds = [0, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3, 10 ** -1]
     random_state = 10
     epoch0 = 50
-    batch_size = 50
+    batch_size = 25
     act_function = 'softmax'
     cost_function = 'accuracy_score'
 
@@ -356,45 +358,13 @@ if __name__ == '__main__':
                          act_function=act_function,
                          cost_function=cost_function)
 
-    # studying 2 hidden layers, softmax, accuracy_score, Brest Cancer data-set
-    n_layers = 2
-    etas = [0.2, 0.1, 0.09, 0.05, 0.01, 0.005]
-    n_neurons = [5, 10, 25, 50, 75, 100, 250, 500]
-
-    classification_study(X_train=X_train, X_test=X_test, y_train=y_train,
-                         y_test=y_test, y_train_encoded=y_train_encoded,
-                         y_test_encoded=y_test_encoded, n_layers=n_layers,
-                         n_neurons=n_neurons, etas=etas,
-                         lmbds=lmbds, random_state=random_state,
-                         epoch0=epoch0, epochs=epochs, batch_size=batch_size,
-                         act_function=act_function,
-                         cost_function=cost_function)
-
     # studying 1 hidden layer, sigmoid, accuracy_score, Brest Cancer data-set
-    n_layers = 1
-    n_neurons = [5, 10, 25, 50, 75, 100, 250, 500]
-    etas = [0.2, 0.1, 0.09, 0.05, 0.01, 0.005]
-    epochs = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
-    lmbds = [0, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3, 10 ** -1, 0.5]
-    random_state = 10
-    epoch0 = 50
-    batch_size = 50
     act_function = 'sigmoid'
-    cost_function = 'accuracy_score'
 
-    classification_study(X_train=X_train, X_test=X_test, y_train=y_train,
-                         y_test=y_test, y_train_encoded=y_train_encoded,
-                         y_test_encoded=y_test_encoded, n_layers=n_layers,
-                         n_neurons=n_neurons, etas=etas,
-                         lmbds=lmbds, random_state=random_state,
-                         epoch0=epoch0, epochs=epochs, batch_size=batch_size,
-                         act_function=act_function,
-                         cost_function=cost_function)
-
-    # studying 2 hidden layers, sigmoid, accuracy_score, Brest Cancer data-set
-    n_layers = 2
-    etas = [0.2, 0.1, 0.09, 0.05, 0.01, 0.005]
-    n_neurons = [5, 10, 25, 50, 75, 100, 250, 500]
+    n_neurons = [1, 2, 3, 4, 5]
+    etas = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
+    epochs = [2, 3, 4, 5]
+    lmbds = [0, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3, 10 ** -1]
 
     classification_study(X_train=X_train, X_test=X_test, y_train=y_train,
                          y_test=y_test, y_train_encoded=y_train_encoded,
