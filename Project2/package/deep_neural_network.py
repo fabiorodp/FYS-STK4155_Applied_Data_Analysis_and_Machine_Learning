@@ -121,6 +121,8 @@ class MLP:
         self.init_weights = init_weights
         self.verbose = verbose
         self.a_funct = act_function
+        self.yi = None
+        self.cost = None
 
         # setting activation function for hidden layers
         self.act_function, self.act_function_prime = \
@@ -172,14 +174,15 @@ class MLP:
                 elif self.a_funct == 'tanh':
                     self.weights.append(
                         np.random.normal(
-                            loc=0.0, scale=4*np.sqrt(2. / (self.layers[l - 1]
-                                                         + self.layers[l])),
+                            loc=0.0,
+                            scale=4 * np.sqrt(2. / (self.layers[l - 1]
+                                                    + self.layers[l])),
                             size=(self.layers[l - 1], self.layers[l])))
 
                 elif self.a_funct == 'relu':
                     self.weights.append(
                         np.random.normal(
-                            loc=0.0, scale=np.sqrt(2)*np.sqrt(2. / (
+                            loc=0.0, scale=np.sqrt(2) * np.sqrt(2. / (
                                     self.layers[l - 1] + self.layers[l])),
                             size=(self.layers[l - 1], self.layers[l])))
 
@@ -213,9 +216,9 @@ class MLP:
             for batch in range(self.n_batches):
                 rand_idxs = \
                     idxs[j * self.batch_size:(j + 1) * self.batch_size]
-                Xi, yi = X[rand_idxs, :], y[rand_idxs]
+                Xi, self.yi = X[rand_idxs, :], y[rand_idxs]
                 self._feed_forward(Xi)
-                self._backpropagation(yi)
+                self._backpropagation(self.yi)
                 j += 1
 
             # saving accuracy scores
@@ -249,13 +252,13 @@ class MLP:
 
     def _backpropagation(self, yi):
         """Class method to perform back-propagation technique."""
+        # calculating loss-error
         self.cost = self.cost_function(y_hat=self.a[-1],
-                                       y_true=yi)
+                                       y_true=self.yi)
 
+        # calculating delta
         self.delta[-1] = self.cost_function_prime(y_hat=self.a[-1],
                                                   y_true=yi)
-
-        # self.delta[-1] = self.a[-1] - yi
 
         # computing gradients for weight and biases
         dw = self.a[-2].T @ self.delta[-1]

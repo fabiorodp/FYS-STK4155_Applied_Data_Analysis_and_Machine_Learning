@@ -28,7 +28,7 @@ def accuracy_score(y_true, y_hat):
 
 
 def accuracy_score_prime(y_true, y_hat):
-    return (y_hat - y_true) / len(y_true)
+    return (y_hat - y_true)  # / len(y_true)
 
 
 def crossentropy(y_hat, y_true):

@@ -89,32 +89,17 @@ def MNIST(test_size=0.2, shuffle=True, stratify=None, scale_X=True,
             plt.title("Label: %d" % digits.target[random_indices[i]])
         plt.show()
 
-    X_train, X_test, Z_train, Z_test = \
+    X_train, X_test, y_train, y_test = \
         train_test_split(inputs, labels, test_size=test_size,
                          shuffle=shuffle, stratify=stratify,
                          random_state=random_state)
 
     # scaling X data
     if scale_X is True:
-        scaler = StandardScaler()
+        scaler = MinMaxScaler()
         scaler.fit(X_train)
         X_test = scaler.transform(X_test)
         X_train = scaler.transform(X_train)
-
-    return X_train, X_test, Z_train[:, np.newaxis], Z_test[:, np.newaxis]
-
-
-def breast_cancer(test_size=0.2, random_state=None):
-    """Load breast cancer data set from Scikit-Learn.
-    """
-    data = load_breast_cancer()
-
-    # Loading, splitting and scaling data
-    X, y = data['data'], data['target']
-    X_train, X_test, y_train, y_test = \
-        train_test_split(X, y, test_size=test_size, random_state=random_state)
-
-    X_train, X_test = scale_data(X_train, X_test, scaler='minmax')
 
     # One hot encoding targets
     y_train = y_train.reshape(-1, 1)
@@ -122,23 +107,32 @@ def breast_cancer(test_size=0.2, random_state=None):
     y_train_encoded = encoder.fit_transform(y_train).toarray()
     y_test_encoded = encoder.fit_transform(y_test.reshape(-1, 1)).toarray()
 
-    return X_train, X_test, y_train_encoded, y_test_encoded
+    return X_train, X_test, y_train, y_test, y_train_encoded, y_test_encoded
 
 
-def scale_data(train_data, test_data, scaler='standard'):
-    if scaler == 'standard':
-        sc = StandardScaler()
-    elif scaler == 'minmax':
-        sc = MinMaxScaler()
-    else:
-        print('Scaler must be "standard" or "minmax"!')
-        return None
+def breast_cancer(test_size=0.2, shuffle=True, stratify=None, scale_X=True,
+                  random_state=None):
+    """Load breast cancer data set from Scikit-Learn."""
+    data = load_breast_cancer()
 
-    train_data = sc.fit_transform(train_data)
-    test_data = sc.transform(test_data)
+    # Loading, splitting and scaling data
+    X, y = data['data'], data['target']
 
-    return train_data, test_data
+    X_train, X_test, y_train, y_test = \
+        train_test_split(X, y, test_size=test_size, shuffle=shuffle,
+                         stratify=stratify, random_state=random_state)
 
+    # scaling X data
+    if scale_X is True:
+        scaler = MinMaxScaler()
+        scaler.fit(X_train)
+        X_test = scaler.transform(X_test)
+        X_train = scaler.transform(X_train)
 
-if __name__ == '__main__':
-    pass
+    # One hot encoding targets
+    y_train = y_train.reshape(-1, 1)
+    encoder = OneHotEncoder(categories='auto')
+    y_train_encoded = encoder.fit_transform(y_train).toarray()
+    y_test_encoded = encoder.fit_transform(y_test.reshape(-1, 1)).toarray()
+
+    return X_train, X_test, y_train, y_test, y_train_encoded, y_test_encoded
