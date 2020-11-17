@@ -8,12 +8,16 @@ gradient_descent.py
 ~~~~~~~~~~
 
 A module to implement the many variants of gradient descent learning such as:
-Batch Gradient Descent (BGD), Stochastic Gradient Descent (SGD) and
-Mini-batch Stochastic Gradient Descent (MiniSGD).
+Batch Gradient Descent (BGD), Stochastic Gradient Descent (SGD),
+Mini-batch Stochastic Gradient Descent (MiniSGD) and Logistic Regression (LR).
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
+from Project2.package.activation_functions import sigmoid
+from Project2.package.cost_functions import crossentropy, crossentropy_prime
+from Project2.package.cost_functions import accuracy_score_prime
+from sklearn.metrics import accuracy_score
 
 
 class BGDM:
@@ -233,3 +237,71 @@ class MiniSGDM(BGDM):
         :param new_batch_size: float: New mini-batch size.
         """
         self.batch_size = new_batch_size
+
+
+class LR(MiniSGDM):
+    """Logistic Regression with Sigmoid"""
+
+    def __init__(self, batch_size=15, epochs=100, eta0=0.1, decay=0.0,
+                 lambda_=0.0, gamma=0.0, regularization=None,
+                 random_state=None):
+        """
+        Constructor for the class.
+
+        :param lambda: float: Regularization value of the model.
+        :param random_state: int: Seed for the experiment.
+        """
+        super().__init__(batch_size, epochs, eta0, decay, lambda_, gamma,
+                         regularization, random_state)
+        self.score = None
+        self.yi = None
+        self.z_pred = None
+
+    def fit(self, X, z, plot_etas=False):
+        """
+        Fitting parameters to regression model.
+
+        :param X: ndarray with the design matrix.
+        :param z: ndarray with the response variables.
+        :param plot_etas: bool: if True, plot epoch X eta.
+        """
+        n = len(z)
+        n_batches = int(n / self.batch_size)
+
+        # Initializing beta randomly
+        self.coef_ = np.random.randn(X.shape[1], 1)
+
+        for epoch in range(self.epochs):
+            idxs = np.arange(n)
+            np.random.shuffle(idxs)
+            j = 0
+
+            # mini-bach with gradient descent
+            for batch in range(n_batches):
+                rand_idxs = \
+                    idxs[j * self.batch_size:(j + 1) * self.batch_size]
+                X_i, self.yi = X[rand_idxs, :], z[rand_idxs]
+
+                # computing gradients
+                # z_hat = sigmoid(X_i @ self.coef_)
+                # gradients = accuracy_score_prime(y_hat=z_hat, y_true=self.yi)
+
+                gradients = X_i.T @ (sigmoid(X_i @ self.coef_) - self.yi)
+
+                # regularization
+                if self.regularization == "l2":  # Ridge regularization
+                    gradients += self.lambda_ * self.coef_
+
+                elif self.regularization == "l1":  # Lasso regularization
+                    gradients += self.lambda_ * self.subgradient_vector()
+
+                self.coef_ -= self.eta0 * gradients
+                j += 1
+
+    def predict(self, X, probability=False):
+        self.z_pred = sigmoid(X @ self.coef_)
+
+        if probability is False:
+            self.z_pred = (self.z_pred > 0.5).astype(np.int)
+
+        return self.z_pred
