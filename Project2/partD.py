@@ -164,7 +164,7 @@ def classification_study(X_train, X_test, y_train, y_test, y_train_encoded,
     best_lambda_1 = lmbds[best_acc_test_1[0]]
 
     # printing best metric and its localization
-    print(f"Best testing MSE is {acc_test_1[best_acc_test_1]} at "
+    print(f"Best testing accuracy is {acc_test_1[best_acc_test_1]} at "
           f"indexes {best_acc_test_1}, with parameters:\n"
           f"Eta: {best_eta_1}\n"
           f"Epoch: {best_epoch_1}\n"
