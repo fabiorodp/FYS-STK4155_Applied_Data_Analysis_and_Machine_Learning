@@ -4,7 +4,6 @@
 # E-mail: fabior@uio.no
 
 import numpy as np
-import pandas as pd
 from imageio import imread
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, MinMaxScaler
@@ -52,6 +51,7 @@ def terrain_data(file='data/SRTM_data_Norway_1.tif', slice_size=15,
 
 def MNIST(test_size=0.2, shuffle=True, stratify=None, scale_X=True,
           verbose=False, plot=False, random_state=None):
+    """Load MNIST data set from Scikit-Learn."""
 
     # seeding random numbers or choices
     np.random.seed(random_state)
