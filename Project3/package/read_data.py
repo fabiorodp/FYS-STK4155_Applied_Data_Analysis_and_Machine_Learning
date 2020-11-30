@@ -66,7 +66,7 @@ def get_instrument(ticker='PETR4', in_folder='data/',
 
             # creating csv data file
             data.to_csv(
-                f'{out_folder}{ticker}_{filename[14:-6]}.csv', sep=';',
+                f'{out_folder}/{ticker}_{filename[14:-6]}.csv', sep=';',
                 index_label=False)
 
 
@@ -93,9 +93,4 @@ def create_candles(file, candles_type='time', candles_periodicity='15min'):
 
 
 if __name__ == '__main__':
-    # get_instrument(ticker='PETR4', in_folder='data/', out_folder='data/')
-    file = 'data/PETR4_20201127.csv'
-    df = create_candles(
-        file, candles_type='time', candles_periodicity='15min')
-
-    ticks = df.iloc[:, ['Price', 'Volume']]
+    get_instrument(ticker='PETR4', in_folder='data/', out_folder='data/PETR4_data')
