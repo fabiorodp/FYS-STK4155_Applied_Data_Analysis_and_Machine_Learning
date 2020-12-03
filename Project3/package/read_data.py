@@ -3,12 +3,41 @@
 # Author: Fabio Rodrigues Pereira
 # E-mail: fabior@uio.no
 
+from pandas_datareader import data as web
 import pandas as pd
 import numpy as np
 import os
 
 # setting parent directory to be accessed
-os.chdir('..')
+# os.chdir('..')
+
+
+def get_data(ticker, start, end, column='Adj Close'):
+    """
+    A function that takes ticker symbols, starting period, ending period
+    as arguments and returns with a Pandas DataFrame of the Adjusted Close
+    Prices for the tickers from Yahoo Finance.
+
+    Parameters:
+    ===================
+    :param ticker: str: Ticker of the financial security.
+    :param start: srt: Date (format='%d/%m/%Y') for the starting point for
+                       the time series.
+    :param end: srt: Date (format='%d/%m/%Y') for the ending point for
+                     the time series.
+    :param column: srt: The specific column to be retrieved.
+
+    Return:
+    ===================
+    It returns a pd.DataFrame or pd.Series containing the time series data
+    of the given column.
+    """
+    start = start
+    end = end
+    info = web.DataReader(
+        ticker, data_source='yahoo', start=start, end=end)[column]
+
+    return pd.DataFrame(info)
 
 
 def get_instrument(ticker='PETR4', in_folder='data/',
@@ -18,9 +47,14 @@ def get_instrument(ticker='PETR4', in_folder='data/',
 
     Parameters:
     ===================
-    :param ticker: str: The financial instrument symbol.
+    :param ticker: str: The financial security symbol.
     :param in_folder: str: The Path where the data files are stored.
-    :param out_folder: str: The Path where the json data file will be stored.
+    :param out_folder: str: The Path where the CSV data file will be stored.
+
+    Return:
+    ===================
+    It does not return anything, only saves the filtered data by the
+    given security ticker.
     """
     for filename in os.listdir(in_folder):
         print(filename)
@@ -70,27 +104,39 @@ def get_instrument(ticker='PETR4', in_folder='data/',
                 index_label=False)
 
 
-def create_candles(file, candles_type='time', candles_periodicity='15min'):
+def create_candles(ticker='PETR4', candles_periodicity='1D',
+                   in_folder='Project3/data/'):
     """
     This is a function to create candles data based on the ticker
 
     Parameters:
     ===================
-    :param file: str: The file containing all negotiations of a ticker.
-    :param candles_type: str: The type of the candle system.
-    :param candles_periodicity: str or int: The periodicity of the candles.
+    :param ticker: str: The financial instrument ticker. Default: 'PETR4'.
+    :param candles_periodicity: str: Periodicity of the candle. Default
+                                     '1D' that means 1 day. Options: 'xmin'
+                                     where x is the number of minutes.
+    :param in_folder: str: The folder where the data file containing all
+                           negotiations of the ticker is stored.
+
+    Return:
+    ===================
+    :returns data: pd.DataFrame: DataFrame containing the OLHCV data for
+                                 the given ticker and periodicity.
     """
-    if candles_type == 'time':
-        df = pd.read_csv(file, sep=';')
-        df.set_index(pd.DatetimeIndex(df['DateTime']), inplace=True)
-        time_candle = df.Price.resample(candles_periodicity).ohlc()
-        grouped = df.groupby(pd.Grouper(freq=candles_periodicity)).sum()
-        time_candle['volume'] = grouped.Volume
-        return time_candle
+    data = pd.DataFrame()
 
-    elif candles_type == 'tick':
-        pass
+    for file in os.listdir(in_folder):
+        print(file)
 
+        if file.endswith(".zip") and file.startswith(f'{ticker}'):
+            df = pd.read_csv(in_folder + file, sep=';')
+            df.set_index(pd.DatetimeIndex(df['DateTime']), inplace=True)
+            time_candle = df.Price.resample(candles_periodicity).ohlc()
+            grouped = df.groupby(pd.Grouper(freq=candles_periodicity)).sum()
+            time_candle['volume'] = grouped.Volume
+            data = pd.concat([data, time_candle])
 
-if __name__ == '__main__':
-    get_instrument(ticker='PETR4', in_folder='data/', out_folder='data/PETR4_data')
+    data.sort_index(inplace=True)
+    data.dropna(inplace=True)
+
+    return data
