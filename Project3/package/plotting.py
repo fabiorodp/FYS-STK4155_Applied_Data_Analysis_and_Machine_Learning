@@ -3,17 +3,11 @@
 # Author: Fabio Rodrigues Pereira
 # E-mail: fabior@uio.no
 
-import pandas as pd
-import numpy as np
 import altair as alt
 import altair_viewer
-import os
-
-# setting parent directory to be accessed
-# os.chdir('..')
 
 
-def candlestick(source, width=800, height=500, view=True):
+def candlestick(source, width=800, height=500, view=True, lines=None):
     """
     Function to generate a interactive candlestick chart for visualization of
     the time series of a financial source.
@@ -25,6 +19,8 @@ def candlestick(source, width=800, height=500, view=True):
     :param width: int: The width of the chart.
     :param height: int: The height of the chart.
     :param view: bool: If True, it will return a URL to visualize the chart.
+    :param lines: dict: Containing as keys the name of the columns and as
+                        values the colors of the lines.
 
     Return:
     ===================
@@ -43,7 +39,7 @@ def candlestick(source, width=800, height=500, view=True):
               axis=alt.Axis(
                   format='%Y/%m/%d',
                   labelAngle=-90,
-                  title='Date in 2020')),
+                  title='Dates')),
         color=open_close_color,
     )
 
@@ -51,8 +47,8 @@ def candlestick(source, width=800, height=500, view=True):
     rule = base.mark_rule().encode(
         alt.Y(
             'low:Q',
-            title='Price',
             scale=alt.Scale(zero=False),
+            axis=alt.Axis(title='Prices', orient='right'),
         ),
         alt.Y2('high:Q')
     )
@@ -63,8 +59,22 @@ def candlestick(source, width=800, height=500, view=True):
         alt.Y2('close:Q')
     )
 
+    # joining OLHC together
+    chart = rule + bar
+
+    # drawing line
+    # !!!!!!!!!! need to fix the problem with the colors
+    if lines is not None:
+        for k, v in lines.items():
+            chart += base.mark_line(
+                color=v,
+                opacity=0.3
+            ).encode(
+                y=alt.Y(k)
+            )
+
     # adding tooltips, properties and interaction
-    chart = (rule + bar).encode(
+    chart = chart.encode(
         tooltip=[alt.Tooltip('index:T', title='Date'),
                  alt.Tooltip('open', title='Open'),
                  alt.Tooltip('low', title='Low'),
@@ -77,10 +87,10 @@ def candlestick(source, width=800, height=500, view=True):
         title=f'Candlestick visualization'
     ).interactive()
 
-    # ########## Not working properly because it is jumping bar - fix later
     # creating x-axis selections
+    # !!!!!!!!!! it is jumping bar - fix later
     nearest = alt.selection(type='single', nearest=True, on='mouseover',
-                            fields=['index:T'], empty='none')
+                            fields=['index'], empty='none')
 
     # drawing a vertical rule at the location of the selection
     v_rule = alt.Chart(source).mark_rule(color='gray').encode(
