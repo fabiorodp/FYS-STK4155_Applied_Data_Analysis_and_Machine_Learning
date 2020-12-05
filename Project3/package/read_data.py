@@ -105,7 +105,7 @@ def get_instrument(ticker='PETR4', in_folder='data/',
 
 
 def create_candles(ticker='PETR4', candles_periodicity='1D',
-                   in_folder='Project3/data/'):
+                   in_folder='data/', out_folder=None):
     """
     This is a function to create candles data based on the ticker
 
@@ -117,6 +117,7 @@ def create_candles(ticker='PETR4', candles_periodicity='1D',
                                      where x is the number of minutes.
     :param in_folder: str: The folder where the data file containing all
                            negotiations of the ticker is stored.
+    :param out_folder: str: The Path where the CSV data file will be stored.
 
     Return:
     ===================
@@ -138,5 +139,11 @@ def create_candles(ticker='PETR4', candles_periodicity='1D',
 
     data.sort_index(inplace=True)
     data.dropna(inplace=True)
+
+    # creating csv data file
+    if out_folder is not None:
+        data.to_csv(
+            f'{out_folder}{ticker}_{candles_periodicity}_OLHCV.csv', sep=';',
+            index_label=False)
 
     return data

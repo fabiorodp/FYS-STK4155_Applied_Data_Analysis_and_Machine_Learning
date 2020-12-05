@@ -32,10 +32,12 @@ def candlestick(source, width=800, height=500, view=True):
     """
     source.reset_index(inplace=True)
 
+    # defining colors for the candlesticks
     open_close_color = alt.condition("datum.open <= datum.close",
                                      alt.value("#06982d"),
                                      alt.value("#ae1325"))
 
+    # creating the base for the candlestick's chart
     base = alt.Chart(source).encode(
         alt.X('DateTime:T',
               axis=alt.Axis(
@@ -45,6 +47,7 @@ def candlestick(source, width=800, height=500, view=True):
         color=open_close_color,
     )
 
+    # creating a line for highest and lowest
     rule = base.mark_rule().encode(
         alt.Y(
             'low:Q',
@@ -54,11 +57,13 @@ def candlestick(source, width=800, height=500, view=True):
         alt.Y2('high:Q')
     )
 
+    # creating the candlestick's bars
     bar = base.mark_bar().encode(
         alt.Y('open:Q'),
         alt.Y2('close:Q')
     )
 
+    # adding tooltips, properties and interaction
     chart = (rule + bar).encode(
         tooltip=[alt.Tooltip('DateTime', title='Date'),
                  alt.Tooltip('open', title='Open'),
@@ -72,6 +77,21 @@ def candlestick(source, width=800, height=500, view=True):
         title=f'Candlestick visualization'
     ).interactive()
 
+    # ########## Not working properly because it is jumping bar - fix later
+    # creating x-axis selections
+    nearest = alt.selection(type='single', nearest=True, on='mouseover',
+                            fields=['DateTime:T'], empty='none')
+
+    # drawing a vertical rule at the location of the selection
+    v_rule = alt.Chart(source).mark_rule(color='gray').encode(
+        x='DateTime:T', ).transform_filter(nearest)
+
+    # adding nearest selection on candlestick's chart
+    chart = chart.add_selection(
+        nearest
+    )
+    # ##########
+
     if view is True:
         # altair_viewer.show(chart)
-        altair_viewer.display(chart)
+        altair_viewer.display(chart + v_rule)
