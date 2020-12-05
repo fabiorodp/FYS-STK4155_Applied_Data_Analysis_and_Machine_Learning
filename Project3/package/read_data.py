@@ -129,7 +129,7 @@ def create_candles(ticker='PETR4', candles_periodicity='1D',
     for file in os.listdir(in_folder):
         print(file)
 
-        if file.endswith(".zip") and file.startswith(f'{ticker}'):
+        if file.endswith(".csv") and file.startswith(f'{ticker}'):
             df = pd.read_csv(in_folder + file, sep=';')
             df.set_index(pd.DatetimeIndex(df['DateTime']), inplace=True)
             time_candle = df.Price.resample(candles_periodicity).ohlc()
