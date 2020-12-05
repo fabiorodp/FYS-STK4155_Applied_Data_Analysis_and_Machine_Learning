@@ -39,7 +39,7 @@ def candlestick(source, width=800, height=500, view=True):
 
     # creating the base for the candlestick's chart
     base = alt.Chart(source).encode(
-        alt.X('DateTime:T',
+        alt.X('index:T',
               axis=alt.Axis(
                   format='%Y/%m/%d',
                   labelAngle=-90,
@@ -65,7 +65,7 @@ def candlestick(source, width=800, height=500, view=True):
 
     # adding tooltips, properties and interaction
     chart = (rule + bar).encode(
-        tooltip=[alt.Tooltip('DateTime', title='Date'),
+        tooltip=[alt.Tooltip('index:T', title='Date'),
                  alt.Tooltip('open', title='Open'),
                  alt.Tooltip('low', title='Low'),
                  alt.Tooltip('high', title='High'),
@@ -80,11 +80,11 @@ def candlestick(source, width=800, height=500, view=True):
     # ########## Not working properly because it is jumping bar - fix later
     # creating x-axis selections
     nearest = alt.selection(type='single', nearest=True, on='mouseover',
-                            fields=['DateTime:T'], empty='none')
+                            fields=['index:T'], empty='none')
 
     # drawing a vertical rule at the location of the selection
     v_rule = alt.Chart(source).mark_rule(color='gray').encode(
-        x='DateTime:T', ).transform_filter(nearest)
+        x='index:T', ).transform_filter(nearest)
 
     # adding nearest selection on candlestick's chart
     chart = chart.add_selection(
