@@ -3,13 +3,7 @@
 # Author: Fabio Rodrigues Pereira
 # E-mail: fabior@uio.no
 
-import pandas as pd
 import numpy as np
-import altair as alt
-import os
-
-# setting parent directory to be accessed
-# os.chdir('..')
 
 
 def bollinger_bands(data, freq=5, std_value=2.0, column_base='close'):
@@ -53,9 +47,16 @@ def ema(data, freq=5, column_base='close'):
     ===================
     data: pd.DataFrame: Time series DataFrame containing OLHCV values plus
                         the Exponential Moving Average (EMA).
+
+    Notes:
+    ===================
+    According to definition, the first value for the EMA is a SMA.
     """
-    data[f'{freq} EMA'] = \
-        data[column_base].ewm(span=freq, adjust=False).mean()
+    sma = data[column_base].rolling(window=freq).mean()
+    ema = data[column_base].copy()
+    ema.iloc[:freq] = sma.iloc[:freq]
+    data[f'{freq} EMA'] = ema.ewm(span=freq, adjust=False,
+                                  ignore_na=False).mean()
 
     return data
 
@@ -109,48 +110,5 @@ def lwma(data, freq=5, column_base='close'):
     data[f'{freq} LWMA'] = \
         data[column_base].rolling(freq).apply(
             lambda prices: np.dot(prices, weights)/weights.sum(), raw=True)
-
-    return data
-
-
-def ema2(data, freq=5, alpha=2.0, column_base='close'):
-    """
-    Function to calculate the Exponential Moving Average (EMA).
-
-    Parameters:
-    ===================
-    :param data: pd.DataFrame: Time series DataFrame containing OLHCV values.
-    :param freq: int: Frequency of the rolling.
-    :param alpha: float: The weight factor.
-    :param column_base: srt: Name of the column that will be the base of
-                         the computations.
-
-    Return:
-    ===================
-    data: pd.DataFrame: Time series DataFrame containing OLHCV values plus
-                        the Exponential Moving Average (EMA).
-    """
-    alpha = alpha / (freq + 1.0)
-    beta = 1 - alpha
-
-    data['SMA'] = data[column_base].rolling(window=freq).mean()
-
-    # First value is a simple SMA
-    data[freq - 1, 'SMA'] = np.mean(data[:freq - 1, column_base])
-
-    # Calculating first EMA
-    data[freq, f'{freq} EMA2'] = (data[freq, column_base] * alpha) + (
-            data[freq - 1, 'SMA'] * beta)
-
-    # Calculating the rest of EMA
-    for i in range(freq + 1, len(data)):
-        try:
-            data[i, f'{freq} EMA2'] = (data[i, column_base] * alpha) + (
-                    data[i - 1, f'{freq} EMA2'] * beta)
-
-        except IndexError:
-            pass
-
-    data.drop('SMA', axis=1, inplace=True)
 
     return data
