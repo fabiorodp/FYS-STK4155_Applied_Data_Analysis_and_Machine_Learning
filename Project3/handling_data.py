@@ -23,7 +23,7 @@ create_candles(
     out_folder='Project3/data/'
 )
 
-# generating data in a given periodicity=1d
+# generating data in a given periodicity=15min
 create_candles(
     ticker='PETR4',
     candles_periodicity='15min',
