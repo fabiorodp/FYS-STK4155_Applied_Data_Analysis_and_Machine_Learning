@@ -6,15 +6,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from Project3.package.fitting_ANNs import fit_RNN
+from Project3.package.fitting_ANNs import fit_RNN, fit_LSTM
 import seaborn as sns
 from sklearn.metrics import mean_squared_error
 
 
-def CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
-                  n_hidden_layers=1, batch_size=1, activation='tanh',
-                  random_state=None, verbose=0):
-
+def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
+                      n_hidden_layers=1, batch_size=1, activation='tanh',
+                      random_state=None, verbose=0):
     # getting column that will be our target to predict
     pred_col_loc = data.columns.get_loc(pred_feature)
 
@@ -77,9 +76,78 @@ def CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
     return avg_mse_train, avg_mse_test, avg_mae_train, avg_mae_test
 
 
+def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
+                       n_hidden_layers=1, batch_size=1,
+                       recurrent_activation='hard_sigmoid',
+                       activation='tanh',
+                       random_state=None, verbose=0):
+    # getting column that will be our target to predict
+    pred_col_loc = data.columns.get_loc(pred_feature)
+
+    # seeding
+    np.random.seed(random_state)
+
+    x = data.to_numpy()
+    ini_point = -x.shape[0] + rolling
+
+    # saving metrics
+    avg_mse_train = np.zeros(shape=(len(epochs), len(units)))
+    avg_mse_test = np.zeros(shape=(len(epochs), len(units)))
+    avg_mae_train = np.zeros(shape=(len(epochs), len(units)))
+    avg_mae_test = np.zeros(shape=(len(epochs), len(units)))
+
+    # searching best parameter combinations
+    for c_idx, u in enumerate(units):
+        for r_idx, e in enumerate(epochs):
+
+            mse_train, mse_test = [], []
+            mae_train, mae_test = [], []
+            for i in range(ini_point, -1):  # -init_point to -2
+                X_train = data.iloc[:i, :].to_numpy()
+                Y_train = \
+                    data.iloc[1:i + 1, pred_col_loc].to_numpy()[:, np.newaxis]
+
+                model, history = \
+                    fit_LSTM(X=X_train, Y=Y_train,
+                             n_hidden_layers=n_hidden_layers, units=u,
+                             epochs=e, batch_size=batch_size,
+                             activation=activation,
+                             recurrent_activation=recurrent_activation,
+                             loss='mean_squared_error',
+                             optimizer='rmsprop', random_state=random_state,
+                             verbose=verbose)
+
+                mse_train.append(history.history['loss'][-1])
+                mae_train.append(history.history['mean_absolute_error'][-1])
+
+                X_validation = data.iloc[i, :].to_numpy()[np.newaxis, :]
+
+                X_validation = \
+                    np.reshape(
+                        X_validation,
+                        (X_validation.shape[0], 1, X_validation.shape[1]))
+
+                y_pred = model.predict(X_validation)
+
+                Y_validation_true = \
+                    np.array([data.iloc[i + 1, pred_col_loc]])[:, np.newaxis]
+
+                mse_test.append(
+                    mean_squared_error(y_true=Y_validation_true,
+                                       y_pred=y_pred))
+
+                mae_test.append(abs(float(Y_validation_true - y_pred)))
+
+            avg_mse_train[r_idx, c_idx] = np.mean(mse_train)
+            avg_mse_test[r_idx, c_idx] = np.mean(mse_test)
+            avg_mae_train[r_idx, c_idx] = np.mean(mae_train)
+            avg_mae_test[r_idx, c_idx] = np.mean(mae_test)
+
+    return avg_mse_train, avg_mse_test, avg_mae_train, avg_mae_test
+
+
 def best_UNITxEPOCH(X, Y, units, epochs, n_hidden_layers=1,
                     activation='tanh', random_state=None, verbose=0):
-
     # seeding
     np.random.seed(random_state)
 
