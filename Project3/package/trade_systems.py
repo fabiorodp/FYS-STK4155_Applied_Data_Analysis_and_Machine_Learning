@@ -133,3 +133,23 @@ def BB_strategy(data_1D, data_15min):
             all_valid_trades['position'].append(valid_trades['position'])
 
     return all_valid_trades, all_triggered_trades
+
+
+def ANN_strategy(data_1D, data_15min):
+    """
+    Function to reproduce our ANN Algorithm trading strategy.
+
+    Parameters:
+    ===================
+    :param data_1D: pd.DataFrame: Containing all OLHCV and other
+                                  features of a daily's periodicity.
+    :param data_15min: pd.DataFrame: Containing all OLHCV and other
+                                     features of a 15min's periodicity.
+
+    Returns:
+    ===================
+    all_valid_trades: dict: Containing all valid positions and DateTime.
+    all_triggered_trades dict: Containing all triggered positions and
+                               DateTime.
+    """
+    pass
