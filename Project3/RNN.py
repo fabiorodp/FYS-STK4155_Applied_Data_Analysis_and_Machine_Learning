@@ -61,18 +61,19 @@ mse_train_h_r3, mse_test_h_r3, mae_train_h_r3, mae_test_h_r3 = \
 
 # ########### plotting comparison for highest
 plt.plot(units, mse_test_h_s1, '.-',
-         label='Testing MSE for Sigmoid with 1 hidden-layer')
+         label='Testing MSE with Sigmoid and 1 hidden-layer')
 plt.plot(units, mse_test_h_s2, '.-',
-         label='Testing MSE for Sigmoid with 2 hidden-layer')
+         label='Testing MSE with Sigmoid and 2 hidden-layer')
 plt.plot(units, mse_test_h_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MSE with Tanh and 1 hidden-layer')
 plt.plot(units, mse_test_h_t2, '--',
-         label='Testing MSE for Tanh with 2 hidden-layer')
+         label='Testing MSE with Tanh and 2 hidden-layer')
 plt.plot(units, mse_test_h_r2,
-         label='Testing MSE for ReLu with 2 hidden-layer')
+         label='Testing MSE with ReLu and 2 hidden-layer')
 plt.plot(units, mse_test_h_r3,
-         label='Testing MSE for ReLu with 3 hidden-layer')
-plt.title('Comparison among models by their validated MSE')
+         label='Testing MSE with ReLu and 3 hidden-layer')
+plt.title('Comparison among models for predicting the highest of '
+          'the next day.')
 plt.ylabel('Validated MSE')
 plt.xlabel('Number of Units')
 plt.legend()
@@ -82,31 +83,32 @@ plt.show()
 
 plt.plot(units, mse_train_h_t1,
          '--',
-         label='Train MSE for Tanh with 1 hidden-layer')
+         label='Train MSE with Tanh and 1 hidden-layer')
 plt.plot(units, mse_test_h_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MSE with Tanh and 1 hidden-layer')
 plt.title('Train Vs Test MSE for predicting the highest of '
           'the next day.')
 plt.ylabel('Training and Validated MSE')
 plt.xlabel('Number of Units')
 plt.legend()
 plt.grid()
-plt.ylim([0, 2])
+plt.ylim([0.25, 2])
 plt.show()
 
 plt.plot(units, mae_test_h_s1, '.-',
-         label='Testing MSE for Sigmoid with 1 hidden-layer')
+         label='Testing MAE with Sigmoid and 1 hidden-layer')
 plt.plot(units, mae_test_h_s2, '.-',
-         label='Testing MSE for Sigmoid with 2 hidden-layer')
+         label='Testing MAE with Sigmoid and 2 hidden-layer')
 plt.plot(units, mae_test_h_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MAE with Tanh and 1 hidden-layer')
 plt.plot(units, mae_test_h_t2, '--',
-         label='Testing MSE for Tanh with 2 hidden-layer')
+         label='Testing MAE with Tanh and 2 hidden-layer')
 plt.plot(units, mae_test_h_r2,
-         label='Testing MSE for ReLu with 2 hidden-layer')
+         label='Testing MAE with ReLu and 2 hidden-layer')
 plt.plot(units, mae_test_h_r3,
-         label='Testing MSE for ReLu with 3 hidden-layer')
-plt.title('Comparison among models by their validated MAE')
+         label='Testing MAE with ReLu and 3 hidden-layer')
+plt.title('Comparison among models for predicting the highest of '
+          'the next day.')
 plt.ylabel('Validated MAE')
 plt.xlabel('Number of Units')
 plt.legend()
@@ -116,9 +118,9 @@ plt.show()
 
 plt.plot(units, mae_train_h_t1,
          '--',
-         label='Train MAE for Tanh with 1 hidden-layer')
+         label='Train MAE with Tanh and 1 hidden-layer')
 plt.plot(units, mae_test_h_t1, '--',
-         label='Testing MAE for Tanh with 1 hidden-layer')
+         label='Testing MAE with Tanh and 1 hidden-layer')
 plt.title('Train Vs Test MAE for predicting the highest of '
           'the next day.')
 plt.ylabel('Training and Validated MAE')
@@ -163,18 +165,19 @@ mse_train_l_r3, mse_test_l_r3, mae_train_l_r3, mae_test_l_r3 = \
 
 # ########### plotting comparison for lowest
 plt.plot(units, mse_test_l_s1, '.-',
-         label='Testing MSE for Sigmoid with 1 hidden-layer')
+         label='Testing MSE with Sigmoid and 1 hidden-layer')
 plt.plot(units, mse_test_l_s2, '.-',
-         label='Testing MSE for Sigmoid with 2 hidden-layer')
+         label='Testing MSE with Sigmoid and 2 hidden-layer')
 plt.plot(units, mse_test_l_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MSE with Tanh and 1 hidden-layer')
 plt.plot(units, mse_test_l_t2, '--',
-         label='Testing MSE for Tanh with 2 hidden-layer')
+         label='Testing MSE with Tanh and 2 hidden-layer')
 plt.plot(units, mse_test_l_r2,
-         label='Testing MSE for ReLu with 2 hidden-layer')
+         label='Testing MSE with ReLu and 2 hidden-layer')
 plt.plot(units, mse_test_l_r3,
-         label='Testing MSE for ReLu with 3 hidden-layer')
-plt.title('Comparison among models by their validated MSE')
+         label='Testing MSE with ReLu and 3 hidden-layer')
+plt.title('Comparison among models for predicting the lowest of '
+          'the next day.')
 plt.ylabel('Validated MSE')
 plt.xlabel('Number of Units')
 plt.legend()
@@ -184,31 +187,32 @@ plt.show()
 
 plt.plot(units, mse_train_l_t1,
          '--',
-         label='Train MSE for Tanh with 1 hidden-layer')
+         label='Train MSE with Tanh and 1 hidden-layer')
 plt.plot(units, mse_test_l_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MSE with Tanh and 1 hidden-layer')
 plt.title('Train Vs Test MSE for predicting the lowest of '
           'the next day.')
 plt.ylabel('Training and Validated MSE')
 plt.xlabel('Number of Units')
 plt.legend()
 plt.grid()
-plt.ylim([0, 2])
+plt.ylim([0.25, 2])
 plt.show()
 
 plt.plot(units, mae_test_l_s1, '.-',
-         label='Testing MSE for Sigmoid with 1 hidden-layer')
+         label='Testing MAE with Sigmoid and 1 hidden-layer')
 plt.plot(units, mae_test_l_s2, '.-',
-         label='Testing MSE for Sigmoid with 2 hidden-layer')
+         label='Testing MAE with Sigmoid and 2 hidden-layer')
 plt.plot(units, mae_test_l_t1, '--',
-         label='Testing MSE for Tanh with 1 hidden-layer')
+         label='Testing MAE with Tanh and 1 hidden-layer')
 plt.plot(units, mae_test_l_t2, '--',
-         label='Testing MSE for Tanh with 2 hidden-layer')
+         label='Testing MAE with Tanh and 2 hidden-layer')
 plt.plot(units, mae_test_l_r2,
-         label='Testing MSE for ReLu with 2 hidden-layer')
+         label='Testing MAE with ReLu and 2 hidden-layer')
 plt.plot(units, mae_test_l_r3,
-         label='Testing MSE for ReLu with 3 hidden-layer')
-plt.title('Comparison among models by their validated MAE')
+         label='Testing MAE with ReLu and 3 hidden-layer')
+plt.title('Comparison among models for predicting the lowest of '
+          'the next day.')
 plt.ylabel('Validated MAE')
 plt.xlabel('Number of Units')
 plt.legend()
@@ -218,9 +222,9 @@ plt.show()
 
 plt.plot(units, mae_train_l_t1,
          '--',
-         label='Train MAE for Tanh with 1 hidden-layer')
+         label='Train MAE with Tanh and 1 hidden-layer')
 plt.plot(units, mae_test_l_t1, '--',
-         label='Testing MAE for Tanh with 1 hidden-layer')
+         label='Testing MAE with Tanh and 1 hidden-layer')
 plt.title('Train Vs Test MAE for predicting the lowest of '
           'the next day.')
 plt.ylabel('Training and Validated MAE')
