@@ -4,7 +4,7 @@
 # E-mail: fabior@uio.no
 
 
-def BB_strategy(data_1D, data_15min):
+def algo_trading(data_1D, data_15min, strategy='5 BB'):
     """
     Function to reproduce the Bollinger Bands Algorithm trading strategy.
 
@@ -14,6 +14,9 @@ def BB_strategy(data_1D, data_15min):
                                   features of a daily's periodicity.
     :param data_15min: pd.DataFrame: Containing all OLHCV and other
                                      features of a 15min's periodicity.
+    :param strategy: str: The name of the strategy. Default: '5 BB' for 5
+                          SMA Bollinger Bands. Option: 'Our' for our algo
+                          trading system.
 
     Returns:
     ===================
@@ -56,21 +59,27 @@ def BB_strategy(data_1D, data_15min):
             highest = candle_range[1][1]
             lowest = candle_range[1][2]
 
-            # getting value for the upper and lower BBs
-            BB_Upper = candle_range[1][6]
-            BB_Lower = candle_range[1][7]
+            # getting value for the upper and lower areas
+            _Upper, _Lower = None, None
+            if strategy == '5 BB':
+                _Upper = candle_range[1][6]
+                _Lower = candle_range[1][7]
+
+            elif strategy == 'Our':
+                _Upper = candle_range[1][17]
+                _Lower = candle_range[1][18]
 
             # getting the closing value for the actual_candle
             closing_price = candle_range[1][3]
 
             # when triggered, we sell at the BB_Upper's price
-            if highest > BB_Upper:
-                triggered_trades['position'].append(BB_Upper)
+            if highest > _Upper:
+                triggered_trades['position'].append(_Upper)
                 triggered_trades['time'].append(f'{actual_candle}')
 
             # when triggered, we buy at the BB_Lower's price
-            if lowest < BB_Lower:
-                triggered_trades['position'].append(-BB_Lower)
+            if lowest < _Lower:
+                triggered_trades['position'].append(-_Lower)
                 triggered_trades['time'].append(f'{actual_candle}')
 
         # go to the next day trading session if no triggers occurred
@@ -133,23 +142,3 @@ def BB_strategy(data_1D, data_15min):
             all_valid_trades['position'].append(valid_trades['position'])
 
     return all_valid_trades, all_triggered_trades
-
-
-def ANN_strategy(data_1D, data_15min):
-    """
-    Function to reproduce our ANN Algorithm trading strategy.
-
-    Parameters:
-    ===================
-    :param data_1D: pd.DataFrame: Containing all OLHCV and other
-                                  features of a daily's periodicity.
-    :param data_15min: pd.DataFrame: Containing all OLHCV and other
-                                     features of a 15min's periodicity.
-
-    Returns:
-    ===================
-    all_valid_trades: dict: Containing all valid positions and DateTime.
-    all_triggered_trades dict: Containing all triggered positions and
-                               DateTime.
-    """
-    pass
