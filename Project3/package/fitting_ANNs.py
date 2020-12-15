@@ -6,18 +6,36 @@
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM, SimpleRNN
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from keras.callbacks import EarlyStopping
 from keras import metrics
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def fit_RNN(X, Y, n_hidden_layers=1, units=100, epochs=50, batch_size=1,
             activation='tanh', loss='mean_squared_error', optimizer='rmsprop',
             random_state=None, verbose=0):
+    """
+    Function to create, compile and fit a SimpleRNN from Keras.
+
+    Parameters:
+    ===================
+    :param X: numpy.array: Containing samples and features.
+    :param Y: numpy.array: Containing targets.
+    :param n_hidden_layers: int: The number of hidden layers.
+    :param units: int: The number of units.
+    :param epochs: int: The number of epochs.
+    :param batch_size: int: The number of batches.
+    :param activation: str: The name of the activation function.
+    :param loss: str: The name of the loss-function.
+    :param optimizer: str: The name of the optimaizer.
+    :param random_state: int: The seeds.
+    :param verbose: int: 0 for False and 1 for True.
+
+
+    Returns:
+    ===================
+    model: keras object: Containing the trained model.
+    history: keras object: Containing the metrics of the fitting.
+    """
     # seeding
     np.random.seed(random_state)
 
@@ -79,6 +97,29 @@ def fit_LSTM(X, Y, n_hidden_layers=1, units=100, epochs=50, batch_size=1,
              activation='tanh', recurrent_activation='hard_sigmoid',
              loss='mean_squared_error', optimizer='rmsprop',
              random_state=None, verbose=0):
+    """
+    Function to create, compile and fit a SimpleRNN from Keras.
+
+    Parameters:
+    ===================
+    :param X: numpy.array: Containing samples and features.
+    :param Y: numpy.array: Containing targets.
+    :param n_hidden_layers: int: The number of hidden layers.
+    :param units: int: The number of units.
+    :param epochs: int: The number of epochs.
+    :param batch_size: int: The number of batches.
+    :param activation: str: The name of the activation function.
+    :param loss: str: The name of the loss-function.
+    :param optimizer: str: The name of the optimaizer.
+    :param random_state: int: The seeds.
+    :param verbose: int: 0 for False and 1 for True.
+
+
+    Returns:
+    ===================
+    model: keras object: Containing the trained model.
+    history: keras object: Containing the metrics of the fitting.
+    """
     # seeding
     np.random.seed(random_state)
 
