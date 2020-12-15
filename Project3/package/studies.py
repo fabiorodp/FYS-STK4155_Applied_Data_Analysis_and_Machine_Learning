@@ -4,16 +4,41 @@
 # E-mail: fabior@uio.no
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from Project3.package.fitting_ANNs import fit_RNN, fit_LSTM
 import seaborn as sns
 from sklearn.metrics import mean_squared_error
 
 
-def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
+def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=1, batch_size=1, activation='tanh',
                       random_state=None, verbose=0):
+    """
+    Function to perform a Time Series Cross-Validation with parameters'
+    combination.
+
+    Parameters:
+    ===================
+    :param data: pd.DataFrame: Containing daily samples and features.
+    :param units: list: Containing values for units.
+    :param epochs: list: Containing values for epochs.
+    :param pred_feature: str: The name of the feature to be predicted.
+    :param rolling: int: Containing the number of days before start
+                         predicting.
+    :param n_hidden_layers: int: Containing the number of hidden layers.
+    :param batch_size: int: Containing the number of mini-batches.
+    :param activation: str: The name of the activation function.
+    :param random_state: int: The seeds.
+    :param verbose: int: 0 for False and 1 for True.
+
+    Returns:
+    ===================
+    avg_mse_train: numpy.array: Containing all training MSE.
+    avg_mse_test: numpy.array: Containing all testing MSE.
+    avg_mae_train: numpy.array: Containing all training MAE.
+    avg_mae_test: numpy.array: Containing all testing MAE.
+    y_pred_hist: numpy.array: Containing all predicted values in series.
+    """
     # getting column that will be our target to predict
     pred_col_loc = data.columns.get_loc(pred_feature)
 
@@ -28,6 +53,7 @@ def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
     avg_mse_test = np.zeros(shape=(len(epochs), len(units)))
     avg_mae_train = np.zeros(shape=(len(epochs), len(units)))
     avg_mae_test = np.zeros(shape=(len(epochs), len(units)))
+    y_pred_hist = np.empty(shape=(len(epochs), len(units)), dtype=object)
 
     # searching best parameter combinations
     for c_idx, u in enumerate(units):
@@ -35,6 +61,7 @@ def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
 
             mse_train, mse_test = [], []
             mae_train, mae_test = [], []
+            _y_pred = []
             for i in range(ini_point, -1):  # -init_point to -2
                 X_train = data.iloc[:i, :].to_numpy()
                 Y_train = \
@@ -58,6 +85,7 @@ def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
                         (X_validation.shape[0], 1, X_validation.shape[1]))
 
                 y_pred = model.predict(X_validation)
+                _y_pred.append(y_pred)
 
                 Y_validation_true = \
                     np.array([data.iloc[i + 1, pred_col_loc]])[:, np.newaxis]
@@ -72,8 +100,10 @@ def RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
             avg_mse_test[r_idx, c_idx] = np.mean(mse_test)
             avg_mae_train[r_idx, c_idx] = np.mean(mae_train)
             avg_mae_test[r_idx, c_idx] = np.mean(mae_test)
+            y_pred_hist[r_idx, c_idx] = _y_pred
 
-    return avg_mse_train, avg_mse_test, avg_mae_train, avg_mae_test
+    return avg_mse_train, avg_mse_test, avg_mae_train, \
+           avg_mae_test, y_pred_hist
 
 
 def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
@@ -81,6 +111,33 @@ def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
                        recurrent_activation='hard_sigmoid',
                        activation='tanh',
                        random_state=None, verbose=0):
+    """
+    Function to perform a Time Series Cross-Validation with parameters'
+    combination.
+
+    Parameters:
+    ===================
+    :param data: pd.DataFrame: Containing daily samples and features.
+    :param units: list: Containing values for units.
+    :param epochs: list: Containing values for epochs.
+    :param pred_feature: str: The name of the feature to be predicted.
+    :param rolling: int: Containing the number of days before start
+                         predicting.
+    :param n_hidden_layers: int: Containing the number of hidden layers.
+    :param batch_size: int: Containing the number of mini-batches.
+    :param recurrent_activation: str: The name of recurrent activation funct.
+    :param activation: str: The name of the activation function.
+    :param random_state: int: The seeds.
+    :param verbose: int: 0 for False and 1 for True.
+
+    Returns:
+    ===================
+    avg_mse_train: numpy.array: Containing all training MSE.
+    avg_mse_test: numpy.array: Containing all testing MSE.
+    avg_mae_train: numpy.array: Containing all training MAE.
+    avg_mae_test: numpy.array: Containing all testing MAE.
+    y_pred_hist: numpy.array: Containing all predicted values in series.
+    """
     # getting column that will be our target to predict
     pred_col_loc = data.columns.get_loc(pred_feature)
 
@@ -95,6 +152,7 @@ def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
     avg_mse_test = np.zeros(shape=(len(epochs), len(units)))
     avg_mae_train = np.zeros(shape=(len(epochs), len(units)))
     avg_mae_test = np.zeros(shape=(len(epochs), len(units)))
+    y_pred_hist = np.empty(shape=(len(epochs), len(units)), dtype=object)
 
     # searching best parameter combinations
     for c_idx, u in enumerate(units):
@@ -102,6 +160,7 @@ def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
 
             mse_train, mse_test = [], []
             mae_train, mae_test = [], []
+            _y_pred = []
             for i in range(ini_point, -1):  # -init_point to -2
                 X_train = data.iloc[:i, :].to_numpy()
                 Y_train = \
@@ -128,6 +187,7 @@ def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
                         (X_validation.shape[0], 1, X_validation.shape[1]))
 
                 y_pred = model.predict(X_validation)
+                _y_pred.append(y_pred)
 
                 Y_validation_true = \
                     np.array([data.iloc[i + 1, pred_col_loc]])[:, np.newaxis]
@@ -142,12 +202,33 @@ def LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=20,
             avg_mse_test[r_idx, c_idx] = np.mean(mse_test)
             avg_mae_train[r_idx, c_idx] = np.mean(mae_train)
             avg_mae_test[r_idx, c_idx] = np.mean(mae_test)
+            y_pred_hist[r_idx, c_idx] = _y_pred
 
-    return avg_mse_train, avg_mse_test, avg_mae_train, avg_mae_test
+    return avg_mse_train, avg_mse_test, avg_mae_train, \
+           avg_mae_test, y_pred_hist
 
 
 def best_UNITxEPOCH(X, Y, units, epochs, n_hidden_layers=1,
                     activation='tanh', random_state=None, verbose=0):
+    """
+    Function to perform a parameters' combination.
+
+    Parameters:
+    ===================
+    :param X: numpy.array: Containing samples and features.
+    :param Y: numpy.array: Containing targets.
+    :param units: list: Containing values for units.
+    :param epochs: list: Containing values for epochs.
+    :param n_hidden_layers: int: Containing the number of hidden layers.
+    :param activation: str: The name of the activation function.
+    :param random_state: int: The seeds.
+    :param verbose: int: 0 for False and 1 for True.
+
+    Returns:
+    ===================
+    mse_train: numpy.array: Containing all training MSE.
+    mae_train: numpy.array: Containing all training MAE.
+    """
     # seeding
     np.random.seed(random_state)
 
