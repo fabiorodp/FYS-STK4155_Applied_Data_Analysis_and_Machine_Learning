@@ -28,35 +28,31 @@ units = [15, 50, 100, 150, 200, 400, 600, 800, 1000, 1200]
 epochs = [50]
 
 # ########### training and CV predicting target high
-mse_train_h_s1, mse_test_h_s1, mae_train_h_s1, mae_test_h_s1 = \
+mse_train_h_s1, mse_test_h_s1, mae_train_h_s1, mae_test_h_s1, y_pred_h_s1 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=1, batch_size=1, activation='sigmoid',
                       random_state=10, verbose=1)
 
-mse_train_h_s2, mse_test_h_s2, mae_train_h_s2, mae_test_h_s2 = \
+mse_train_h_s2, mse_test_h_s2, mae_train_h_s2, mae_test_h_s2, y_pred_h_s2 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=2, batch_size=1, activation='sigmoid',
                       random_state=10, verbose=1)
 
-mse_train_h_t1, mse_test_h_t1, mae_train_h_t1, mae_test_h_t1 = \
+mse_train_h_t1, mse_test_h_t1, mae_train_h_t1, mae_test_h_t1, y_pred_h_t1 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=1, batch_size=1, activation='tanh',
                       random_state=10, verbose=1)
 
-mse_train_h_t2, mse_test_h_t2, mae_train_h_t2, mae_test_h_t2 = \
+mse_train_h_t2, mse_test_h_t2, mae_train_h_t2, mae_test_h_t2, y_pred_h_t2 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=2, batch_size=1, activation='tanh',
                       random_state=10, verbose=1)
 
-mse_train_h_r2, mse_test_h_r2, mae_train_h_r2, mae_test_h_r2 = \
+mse_train_h_r2, mse_test_h_r2, mae_train_h_r2, mae_test_h_r2, y_pred_h_r2 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                       n_hidden_layers=2, batch_size=2, activation='relu',
                       random_state=10, verbose=1)
 
-mse_train_h_r3, mse_test_h_r3, mae_train_h_r3, mae_test_h_r3 = \
-    RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='high',
-                      rolling=60, n_hidden_layers=3, batch_size=1,
-                      activation='relu', random_state=10, verbose=1)
 # ###########
 
 # ########### plotting comparison for highest
@@ -70,8 +66,6 @@ plt.plot(units, mse_test_h_t2, '--',
          label='Testing MSE with Tanh and 2 hidden-layer')
 plt.plot(units, mse_test_h_r2,
          label='Testing MSE with ReLu and 2 hidden-layer')
-plt.plot(units, mse_test_h_r3,
-         label='Testing MSE with ReLu and 3 hidden-layer')
 plt.title('Comparison among models for predicting the highest of '
           'the next day.')
 plt.ylabel('Validated MSE')
@@ -105,8 +99,6 @@ plt.plot(units, mae_test_h_t2, '--',
          label='Testing MAE with Tanh and 2 hidden-layer')
 plt.plot(units, mae_test_h_r2,
          label='Testing MAE with ReLu and 2 hidden-layer')
-plt.plot(units, mae_test_h_r3,
-         label='Testing MAE with ReLu and 3 hidden-layer')
 plt.title('Comparison among models for predicting the highest of '
           'the next day.')
 plt.ylabel('Validated MAE')
@@ -132,33 +124,23 @@ plt.show()
 # ###########
 
 # ########### training and CV predicting target low
-mse_train_l_s1, mse_test_l_s1, mae_train_l_s1, mae_test_l_s1 = \
+mse_train_l_s1, mse_test_l_s1, mae_train_l_s1, mae_test_l_s1, y_pred_l_s1 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                       n_hidden_layers=1, batch_size=1, activation='sigmoid',
                       random_state=10, verbose=1)
 
-mse_train_l_s2, mse_test_l_s2, mae_train_l_s2, mae_test_l_s2 = \
+mse_train_l_s2, mse_test_l_s2, mae_train_l_s2, mae_test_l_s2, y_pred_l_s2 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                       n_hidden_layers=2, batch_size=1, activation='sigmoid',
                       random_state=10, verbose=1)
 
-mse_train_l_t1, mse_test_l_t1, mae_train_l_t1, mae_test_l_t1 = \
+mse_train_l_t1, mse_test_l_t1, mae_train_l_t1, mae_test_l_t1, y_pred_l_t1 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                       n_hidden_layers=1, batch_size=1, activation='tanh',
                       random_state=10, verbose=1)
 
-mse_train_l_t2, mse_test_l_t2, mae_train_l_t2, mae_test_l_t2 = \
+mse_train_l_t2, mse_test_l_t2, mae_train_l_t2, mae_test_l_t2, y_pred_l_t2 = \
     RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                       n_hidden_layers=2, batch_size=1, activation='tanh',
                       random_state=10, verbose=1)
-
-mse_train_l_r2, mse_test_l_r2, mae_train_l_r2, mae_test_l_r2 = \
-    RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
-                      n_hidden_layers=2, batch_size=2, activation='relu',
-                      random_state=10, verbose=1)
-
-mse_train_l_r3, mse_test_l_r3, mae_train_l_r3, mae_test_l_r3 = \
-    RNN_CV_UNITxEPOCH(data, units, epochs, pred_feature='low',
-                      rolling=60, n_hidden_layers=3, batch_size=1,
-                      activation='relu', random_state=10, verbose=1)
 # ###########

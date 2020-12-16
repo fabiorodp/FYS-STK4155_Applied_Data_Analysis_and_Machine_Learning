@@ -27,42 +27,42 @@ units = [50, 100, 150, 200, 400, 600, 800, 1000, 1200]
 epochs = [50]
 
 # ########### training and CV predicting target high
-mse_train_h_s1, mse_test_h_s1, mae_train_h_s1, mae_test_h_s1 = \
+mse_train_h_s1, mse_test_h_s1, mae_train_h_s1, mae_test_h_s1, y_pred_h_s1 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=1, batch_size=1,
                        recurrent_activation='hard_sigmoid',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_h_s2, mse_test_h_s2, mae_train_h_s2, mae_test_h_s2 = \
+mse_train_h_s2, mse_test_h_s2, mae_train_h_s2, mae_test_h_s2, y_pred_h_s2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='hard_sigmoid',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_h_t1, mse_test_h_t1, mae_train_h_t1, mae_test_h_t1 = \
+mse_train_h_t1, mse_test_h_t1, mae_train_h_t1, mae_test_h_t1, y_pred_h_t1 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=1, batch_size=1,
                        recurrent_activation='tanh',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_h_t2, mse_test_h_t2, mae_train_h_t2, mae_test_h_t2 = \
+mse_train_h_t2, mse_test_h_t2, mae_train_h_t2, mae_test_h_t2, y_pred_h_t2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='tanh',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_h_r2, mse_test_h_r2, mae_train_h_r2, mae_test_h_r2 = \
+mse_train_h_r2, mse_test_h_r2, mae_train_h_r2, mae_test_h_r2, y_pred_h_r2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='relu',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_h_r3, mse_test_h_r3, mae_train_h_r3, mae_test_h_r3 = \
+mse_train_h_r3, mse_test_h_r3, mae_train_h_r3, mae_test_h_r3, y_pred_h_r3 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='high', rolling=60,
                        n_hidden_layers=3, batch_size=1,
                        recurrent_activation='relu',
@@ -71,42 +71,42 @@ mse_train_h_r3, mse_test_h_r3, mae_train_h_r3, mae_test_h_r3 = \
 # ###########
 
 # ########### training and CV predicting target low
-mse_train_l_s1, mse_test_l_s1, mae_train_l_s1, mae_test_l_s1 = \
+mse_train_l_s1, mse_test_l_s1, mae_train_l_s1, mae_test_l_s1, y_pred_l_s1 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=1, batch_size=1,
                        recurrent_activation='hard_sigmoid',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_l_s2, mse_test_l_s2, mae_train_l_s2, mae_test_l_s2 = \
+mse_train_l_s2, mse_test_l_s2, mae_train_l_s2, mae_test_l_s2, y_pred_l_s2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='hard_sigmoid',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_l_t1, mse_test_l_t1, mae_train_l_t1, mae_test_l_t1 = \
+mse_train_l_t1, mse_test_l_t1, mae_train_l_t1, mae_test_l_t1, y_pred_l_t1 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=1, batch_size=1,
                        recurrent_activation='tanh',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_l_t2, mse_test_l_t2, mae_train_l_t2, mae_test_l_t2 = \
+mse_train_l_t2, mse_test_l_t2, mae_train_l_t2, mae_test_l_t2, y_pred_l_t2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='tanh',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_l_r2, mse_test_l_r2, mae_train_l_r2, mae_test_l_r2 = \
+mse_train_l_r2, mse_test_l_r2, mae_train_l_r2, mae_test_l_r2, y_pred_l_r2 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=2, batch_size=1,
                        recurrent_activation='relu',
                        activation='tanh',
                        random_state=10, verbose=1)
 
-mse_train_l_r3, mse_test_l_r3, mae_train_l_r3, mae_test_l_r3 = \
+mse_train_l_r3, mse_test_l_r3, mae_train_l_r3, mae_test_l_r3, y_pred_l_r3 = \
     LSTM_CV_UNITxEPOCH(data, units, epochs, pred_feature='low', rolling=60,
                        n_hidden_layers=3, batch_size=1,
                        recurrent_activation='relu',
