@@ -1,89 +1,10 @@
 \section{Discussion and Results}
 \label{chap:Discussion and Results}
 
-\subsection{Handling the raw data and choosing a security}
-\label{chap:Handling the raw data and choosing a security}
-
-\quad Our raw data came from B3 Brazilian's stock exchange, which can be download freely from \href{http://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/cotacoes/}{\textit{its website}}. The files contain all negotiations (historical series of data) for all securities from a trading section (day). We have downloaded the files containing the data-series from 22.06.2020 to 04.12.2020, and the chosen security that our studies will focus on will be PETR4. For that, a python function called get\_instrument() in the \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/package/read_data.py}{Project3/package/read\_data.py} file does the job of extracting all negotiations for PETR4.\\
-
-It is essential to state that PETR4 is the biggest specialized company in Brazil's oil, natural gas, and energy industry. Besides, in the B3 market, this stock has one of the highest liquidity flow that guarantee us to avoid higher price gaps, slippage, or any other trading issues. These reasons justify our choice for PETR4, but any additional security can perform the following experiments.
-
-\subsection{Engineering the features and deciding the prediction's targets}
-\label{chap:Engineering the features and deciding the prediction's targets}
-
-\quad Most of the studies using ANN for time series forecasting uses input data holding the stock daily (OLHC) opening, lowest, highest, and closing prices \hyperref[Bib:Leonardo C. Martinez, Diego N. da Hora, Joao R. de M. Palotti, Wagner Meira Jr. and Gisele L. Pappa]{[5]}\hyperref[Bib:Van-Dai Ta, Chuan-Ming Liu, Direselign Addis Tadesse]{[6]}. The input may include many other \hyperref[chap:Technical Analysis]{technical analysis (TA)} or fundamental analysis (FA) indicators.\\
-
-As this report considers short-term trading structures, there is no reason to use fundamentalists' indicators published quarterly. However, technical indicators are very relevant and useful to bring more information to our ANN's models. Hence, as introduced in the theory section of this work, we will use three technical tools, such that, \hyperref[chap:Simple Moving Average (SMA)]{Simple Moving Average (SMA)}, \hyperref[chap:Exponential Moving Average (EMA)]{Exponential Moving Average (EMA)}, and \hyperref[chap:Bollinger Bands (BB)]{Bollinger Bands (BBs)}.\\
-
-Therefore, the 16 variables/features used as input to RNN and LSTM are described in the following table:
-
-\begin{table}[H]
-\centering
-\begin{tabular}{ |p{1cm}||p{11cm}|  }
-\hline
-\multicolumn{2}{|c|}{Features for training data} \\
-\hline
-\centering
-Qtd & Description\\
-\hline
-\centering
-4   & The opening, lowest, highest, closing prices and volume (OLHCV);\\
-\centering
-9   & The upper, middle and lower BBs for 5, 10 and 20 periods;\\
-\centering
-3   & The EMAs for 5, 10 and 20 periods.\\
-\hline
-\end{tabular}
-\label{table:TrainingFeatures}
-\caption{Variables/features used as input to RNN and LSTM models.}
-\end{table}
-
-%\bigskip
-
-Remark that these features test the ability of the RNN and LSTM to learn from previous information of the time series data. Besides, these features were chosen according to the author's trading practices, but it could have been chosen in any other preferable periods. As a future research objective, it would be a relevant idea to study the effect of several indicators in the learning and the appropriate amount of historical data that should be considered.\\
-
-Regarding the prediction's targets, we want to design a valuable tool for algorithm tradings and decision-making processes. The idea is to predict the highest and lowest of the next trading section (next day). This information would bring a rouge advance and benefit for day-traders because they will start the day already knowing the probable highest and lowest and, consequently, avoid trading operations in the wrong direction against the oversold (lowest of the day) overbought (highest of the day) areas.
-
-\subsection{Time series Cross-Validation}
-\label{chap:Time series Cross-Validation}
-
-\quad The Machine Learning system, in general, learns the data's structure so that we can predict the future. When we fit and train the learning algorithm, it does not surprise the spectacular results that can be found. Still, it typically has zero forecasting power if not tested with unseen data \hyperref[Bib:Lopez de Prado]{[4][p. 131]}. Therefore, one solution is to perform Cross-Validation (CV) splits, where we separate the entire data on training and testing sets.\\
-
-Regarding time-series data, the typical CV, which handles independent identically distributed (IID) sets, fails in its proposes. Indeed, we are dealing with ordered, recurrent, and serially-correlated data, which can not be split into unordered blocks or even shuffled. Besides, it is also common to have leakage \hyperref[Bib:Lopez de Prado]{[4][p. 131]} when pieces of information from the training set also arise in the testing sets. One widespread example of leakage is when one wants to predict a period's closing price giving the highest and lowest of the same time step. The ideal in this scenario is to provide the highest and lowest of the previous time step. Thinking on leakage, Professor Marcos Lopes de Prado elaborated a policy to reduce the likelihood of leakage, \textit{ipsis verbis} \hyperref[Bib:Lopez de Prado]{[4][p. 132]}:\\
-
-\noindent \textit{\textbf{1st.} Drop from the training set any observation $i$ where $Y_i$ is a function of information used to determine $Y_j$, and $j$ belongs to the testing set.}\\
-
-\qquad \textit{\textbf{(a)} For examples, $Y_i$ and $Y_j$ should not span overlapping periods.}\\
-
-\noindent \textit{\textbf{2nd.} Avoid over-fitting the classifier. In this way, even if some leakage occurs, the classifier will not be able to profit from it. Use:}\\
-
-\qquad \textit{\textbf{(a)} Early stopping of the base estimators;}\\
-
-\qquad \textit{\textbf{(b)} Bagging of classifiers, while controlling for oversampling on redundant examples, so that the individual classifiers are as diverse as possible.}\\
-
-\qquad \qquad \textit{\textbf{(b.i)} Set max\_samples to the average uniqueness.}\\
-
-\qquad \qquad \textit{\textbf{(b.ii)} Apply sequential bootstrap.}\\
-
-In this project, we have followed Prado's policies for avoiding leakages.\\
-
-For the CV technique, we have used the proposed methodology given by \hyperref[Bib:Hyndman, R.J., and Athanasopoulos, G.]{[9]}[\href{https://otexts.com/fpp2/}{Ch.3.4}], which describes a procedure for testing unseen data with series of test sets containing a single observation, and the corresponding training set consists of rolled samples that occurred before. The diagram that illustrates the series of training and testing sets follows \hyperref[Bib:Hyndman, R.J., and Athanasopoulos, G.]{[9][Ch.3.4]}:
-
-\begin{figure}[H]
-\label{fig:CV}
-\centering
-\includegraphics[height=4cm]{CV}
-\caption{Time series CV using \textit{"evaluation on a rolling forecasting origin"}\hyperref[Bib:Hyndman, R.J., and Athanasopoulos, G.]{[9][Ch.3.4]. Blue data represents the training set. Red data represents the testing set.}}
-\end{figure}
-
-The accuracy of the predictions will be calculated by averaging over the Mean Squared Error (MSE) and Mean Absolute Error (MAE) resulted from all training and validations. This method is called \textit{"evaluation on a rolling forecasting origin"} by the authors \hyperref[Bib:Hyndman, R.J., and Athanasopoulos, G.]{[9][Ch.3.4]} because of the training sets based on rolls ahead in time.\\
-
-Our script called \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/package/studies.py}{studies.py} in \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/package/}{Project3/package/} directory performs a Time series Cross-Validation with parameter combination of Units and Epochs. The beginning's rolling value for training is defined by default as 60-time steps, which means that our ANN model will start the training with the first 60-days of data, and then it validates the 61's day and measure the testing metrics. The CV algorithm keeps doing the same procedure for the next steps, training 61-days and validating the 62's day, until all data have been gone. In the end, the average testing metrics are returned for an assessment of the best model and parameters.
-
 \subsection{Training RNN model and optimizing hyper-parameters}
 \label{chap:Training RNN model and optimizing hyper-parameters}
 
-\quad This section will feed and fit a \href{https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN}{SimpleRNN} model from Keras with our features and targets using the \hyperref[chap:Time series Cross-Validation]{\textit{Time Series Cross-Validation}} discussed before. A combination of parameters is applied with different numbers for units, several activation functions and various numbers of hidden-layers for epoch equals 50 and mini batch equals 1 avoiding costly computations, as follow:
+\quad This section will feed and fit a \href{https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN}{\textit{SimpleRNN}} model from Keras with our features and targets using the \hyperref[chap:Time series Cross-Validation]{\textit{Time Series Cross-Validation}} discussed before. A combination of parameters is applied with different numbers for units, several activation functions and various numbers of hidden-layers for epoch equals 50 and mini batch equals 1 avoiding costly computations, as follow:
 
 \begin{table}[H]
 \centering
@@ -107,18 +28,18 @@ Loss-Function & Mean Squared Error (MSE);\\
 
 Our aim here is to find the most promising model (lowest testing MSE and MAE) with the most efficient parameters (lowest number of units as function of hidden layers and activation function). For that, we need to investigate which parameter (activation function, hidden-layers, and units) combination is the best. Further, the experiments will be based on the loss-curve, the number of epochs and any other possible way of optimization.\\
 
-The test file \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/RNN.py}{RNN.py} stored in our GitHub repository replicates all the following results in the next sub-sections.
+The test file \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/RNN.py}{\textit{RNN.py}} stored in our GitHub repository replicates all the following results in the next sub-sections.
 
 \subsubsection{Predicting the highest price of the next day using RNN}
 \label{chap:Predicting the highest price of the next day using RNN}
 
-\quad We start experimenting the input data presented in \hyperref[table:TrainingFeatures]{Table 1} on the SimpleRNN model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for SimpleRNN]{Table 2}. The goal is to optimize the SimpleRNN model for predicting the highest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training RNN model and optimizing hyper-parameters]{\textit{Taining RNN model and optimizing hyper-parameters}} section.\\
+\quad We start experimenting the input data presented in \hyperref[table:TrainingFeatures]{\textit{Table 1}} on the SimpleRNN model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for SimpleRNN]{\textit{Table 2}}. The goal is to optimize the SimpleRNN model for predicting the highest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training RNN model and optimizing hyper-parameters]{\textit{Taining RNN model and optimizing hyper-parameters}} section.\\
 
 Starting with Sigmoid's activation function and hidden-layers 1 and 2, the results follow:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -151,13 +72,13 @@ Sigmoid & 2 & 1200 & 0.52 & 0.56 &	0.51 &	0.52\\
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, Sigmoid, High]{Table 3} shows that the Testing MSE and MAE achieve their best-validated accuracy values of 0.55 and 0.49 for one hidden-layer and 0.48 and 0.45 for two hidden-layers. Note that the metrics for one hidden-layer have not hit the lowest by 1200 units, although it might have happened if we have increased the number of units even more. However, increasing the number of units above 1200 is very costly for computations, and it would be better practice to increase the number of hidden-layers instead. Indeed, the best accuracy metrics for two hidden-layers were by 800 units where is the optimal point for the model because, above that, the metrics worsen again.\\
+\hyperref[table:Results for RNN, Sigmoid, High]{\textit{Table 3}} shows that the Testing MSE and MAE achieve their best-validated accuracy values of 0.55 and 0.49 for one hidden-layer and 0.48 and 0.45 for two hidden-layers. Note that the metrics for one hidden-layer have not hit the lowest by 1200 units, although it might have happened if we have increased the number of units even more. However, increasing the number of units above 1200 is very costly for computations, and it would be better practice to increase the number of hidden-layers instead. Indeed, the best accuracy metrics for two hidden-layers were by 800 units where is the optimal point for the model because, above that, the metrics worsen again.\\
 
 Next, we perform Tanh's activation function for hidden-layers 1 and 2, the outcomes go:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -190,13 +111,13 @@ Tanh & 2 & 1200 & 0.52 & 0.56 &	0.51 &	0.52\\
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, Tanh, High]{Table 4} exhibits that the Testing MSE and MAE obtain their best-validated accuracy values of 0.48 and 0.45 for one hidden-layer and 0.51 and 0.47 for two hidden-layers. Remark that the optimal point happened at units equals 800 for both one or two hidden-layers. Thus, we would choose one-hidden layer as the best model because it is costly less-expensive and got slightly better metrics than two hidden-layers.\\
+\hyperref[table:Results for RNN, Tanh, High]{\textit{Table 4}} exhibits that the Testing MSE and MAE obtain their best-validated accuracy values of 0.48 and 0.45 for one hidden-layer and 0.51 and 0.47 for two hidden-layers. Remark that the optimal point happened at units equals 800 for both one or two hidden-layers. Thus, we would choose one-hidden layer as the best model because it is costly less-expensive and got slightly better metrics than two hidden-layers.\\
 
 Finally, ReLu's activation function is run for hidden-layers 2 and 3 with the measures:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -229,18 +150,18 @@ ReLu & 3 & 1200 & 0.52 & 0.56 &	0.51 &	0.52\\
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, ReLu, High]{Table 5} reveals that the Testing MSE and MAE reach their best-validated accuracy values of 0.48 and 0.45 for two hidden-layer and 0.48 and 0.45 for three hidden-layers. Important to state that ReLu with one hidden-layer makes the computations explode to a very high value, then it was not considered in this report. On the other hand, there is no relevant difference between training ReLu with two or three hidden-layers because both got the same best-validated accuracy metrics by 800 units.\\
+\hyperref[table:Results for RNN, ReLu, High]{\textit{Table 5}} reveals that the Testing MSE and MAE reach their best-validated accuracy values of 0.48 and 0.45 for two hidden-layer and 0.48 and 0.45 for three hidden-layers. Important to state that ReLu with one hidden-layer makes the computations explode to a very high value, then it was not considered in this report. On the other hand, there is no relevant difference between training ReLu with two or three hidden-layers because both got the same best-validated accuracy metrics by 800 units.\\
 
 \subsubsection{Predicting the lowest price of the next day using RNN}
 \label{chap:Predicting the lowest price of the next day using RNN}
 
-\quad Now, we apply again the input data presented in \hyperref[table:TrainingFeatures]{Table 1} on the SimpleRNN model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for SimpleRNN]{Table 2}. The goal is to optimize the SimpleRNN model for predicting the lowest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training RNN model and optimizing hyper-parameters]{\textit{Taining RNN model and optimizing hyper-parameters}} section.\\
+\quad Now, we apply again the input data presented in \hyperref[table:TrainingFeatures]{\textit{Table 1}} on the SimpleRNN model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for SimpleRNN]{\textit{Table 2}}. The goal is to optimize the SimpleRNN model for predicting the lowest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training RNN model and optimizing hyper-parameters]{\textit{Taining RNN model and optimizing hyper-parameters}} section.\\
 
 From Sigmoid's activation function and hidden-layers 1 and 2, the results follow:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -273,13 +194,13 @@ Sigmoid & 2 & 1200 & 0.48 &	0.47 &	0.50 &	0.57\\
 \caption{Parameters' combinations for predicting the next day's lowest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, Sigmoid, Low]{Table 6} demonstrates that the Testing MSE and MAE achieve their best-validated accuracy values of 0.46 and 0.51 for one hidden-layer and 0.44 and 0.50 for two hidden-layers. As occurred before, the metrics for one hidden-layer have not hit the lowest by 1200 units. The convergence to the minimum would happen if the number of units or number of epoch increases, but it would increase the computations' cost. In this report, we restricted these numbers, but for future experiments, it would be relevant to investigate these topics.\\
+\hyperref[table:Results for RNN, Sigmoid, Low]{\textit{Table 6}} demonstrates that the Testing MSE and MAE achieve their best-validated accuracy values of 0.46 and 0.51 for one hidden-layer and 0.44 and 0.50 for two hidden-layers. As occurred before, the metrics for one hidden-layer have not hit the lowest by 1200 units. The convergence to the minimum would happen if the number of units or number of epoch increases, but it would increase the computations' cost. In this report, we restricted these numbers, but for future experiments, it would be relevant to investigate these topics.\\
 
 Now, we perform Tanh's activation function for hidden-layers 1 and 2, and the outcomes go:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -312,13 +233,13 @@ Tanh & 2 & 1200 & 0.48 & 0.47 &	0.50 &	0.57\\
 \caption{Parameters' combinations for predicting the next day's lowest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, Tanh, Low]{Table 7} presents that the Testing MSE and MAE reach their best-validated accuracy rates of 0.45 and 0.50 for one hidden-layer and 0.45 and 0.50 for two hidden-layers. Both scores that happened at units equals 600, evidence that one or two-hidden layers have not much difference in terms of learning and predicting. Thus, we would choose one-hidden layer as the best model because it is costly less-expensive.\\
+\hyperref[table:Results for RNN, Tanh, Low]{\textit{Table 7}} presents that the Testing MSE and MAE reach their best-validated accuracy rates of 0.45 and 0.50 for one hidden-layer and 0.45 and 0.50 for two hidden-layers. Both scores that happened at units equals 600, evidence that one or two-hidden layers have not much difference in terms of learning and predicting. Thus, we would choose one-hidden layer as the best model because it is costly less-expensive.\\
 
 Lastly, ReLu's activation function is run for two or three hidden-layers:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -351,7 +272,7 @@ ReLu & 3 & 1200 & 0.48 & 0.47 &	0.51 &	0.57\\
 \caption{Parameters' combinations for predicting the next day's lowest price.}
 \end{table}
 
-\hyperref[table:Results for RNN, ReLu, Low]{Table 8} reports that the Testing MSE and MAE accomplish their best-validated accuracy of 0.45 and 0.50 for two hidden-layer and 0.45 and 0.50 for three hidden-layers. There is no relevant difference between training ReLu with two or three hidden-layers because both got the same best-validated accuracy metrics by 600 units.\\
+\hyperref[table:Results for RNN, ReLu, Low]{\textit{Table 8}} reports that the Testing MSE and MAE accomplish their best-validated accuracy of 0.45 and 0.50 for two hidden-layer and 0.45 and 0.50 for three hidden-layers. There is no relevant difference between training ReLu with two or three hidden-layers because both got the same best-validated accuracy metrics by 600 units.\\
 
 \subsection{Training LSTM model and optimizing hyper-parameters}
 \label{chap:Training LSTM model and optimizing hyper-parameters}
@@ -381,18 +302,18 @@ Loss-Function & Mean Squared Error (MSE);\\
 
 Our aim is to find the most promising model (lowest testing MSE and MAE) with the most efficient parameters (lowest number of units as function of hidden layers and activation function). For that, we need to investigate which parameter (activation function, hidden-layers, and units) combination is the best. Further, the experiments will be based on the loss-curve, the number of epochs and any other possible way of optimization.\\
 
-The test file \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/LSTM.py}{LSTM.py} stored in our GitHub repository replicates all the following results in the next sub-sections.
+The test file \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/LSTM.py}{\textit{LSTM.py}} stored in our GitHub repository replicates all the following results in the next sub-sections.
 
 \subsubsection{Predicting the highest price of the next day using LSTM}
 \label{chap:Predicting the highest price of the next day using LSTM}
 
-\quad We keep exploring the input data presented in \hyperref[table:TrainingFeatures]{Table 1}, but now on the LSTM model with various combinations of parameters as outlined in \hyperref[table:Hyper-parameters for LSTM]{Table 9}. The purpose is to optimize the LSTM model for predicting the highest price of the next day with the most promising and effective parameters as disclosed in \hyperref[chap:Training LSTM model and optimizing hyper-parameters]{\textit{Training LSTM model and optimizing hyper-parameters}} section.\\
+\quad We keep exploring the input data presented in \hyperref[table:TrainingFeatures]{\textit{Table 1}}, but now on the LSTM model with various combinations of parameters as outlined in \hyperref[table:Hyper-parameters for LSTM]{\textit{Table 9}}. The purpose is to optimize the LSTM model for predicting the highest price of the next day with the most promising and effective parameters as disclosed in \hyperref[chap:Training LSTM model and optimizing hyper-parameters]{\textit{Training LSTM model and optimizing hyper-parameters}} section.\\
 
 The followed results contain the training and validation results with Hard-Sigmoid's activation function and hidden-layers 1 and 2:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -423,7 +344,7 @@ Hard-Sigmoid & 2 & 1200 & 0.36 &	0.62 &	0.40 &	0.52\\
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for LSMT, Sigmoid, High]{Table 10} registers that the Testing MSE and MAE achieve their best-validated precision of 2.19 and 1.19 for one hidden-layer and 1200 units, and 0.58 and 0.50 for two hidden-layers and 1000 units. Both best scenarios appear not to have converged to their minimum validated score, and a higher number of units and epochs would be relevant for futures tests.\\
+\hyperref[table:Results for LSMT, Sigmoid, High]{\textit{Table 10}} registers that the Testing MSE and MAE achieve their best-validated precision of 2.19 and 1.19 for one hidden-layer and 1200 units, and 0.58 and 0.50 for two hidden-layers and 1000 units. Both best scenarios appear not to have converged to their minimum validated score, and a higher number of units and epochs would be relevant for futures tests.\\
 
 Note that the LSTM model appears to need more units or epochs to reach better scores than the RNN model, and might be the reason that a higher number of units is necessary for converging to its minimum accuracy.\\
 
@@ -431,7 +352,7 @@ Tanh's activation function for one and two hidden-layers is implemented, and the
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -462,13 +383,12 @@ Tanh & 2 & 1200 & 0.43 &	0.83 &	0.43 &	0.57\\
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for LSTM, Tanh, High]{Table 11} presents that the Testing MSE and MAE get their best-validated accuracy of 0.49 and 0.45 for one hidden-layer and 1000 units, and 0.61 and 0.53 for two hidden-layers and 800 units. The first scenario with one hidden-layer and 1000 units was the most promising (better-validated metrics) and efficient (less time for training and predicting).\\
+\hyperref[table:Results for LSTM, Tanh, High]{\textit{Table 11}} presents that the Testing MSE and MAE get their best-validated accuracy of 0.49 and 0.45 for one hidden-layer and 1000 units, and 0.61 and 0.53 for two hidden-layers and 800 units. The first scenario with one hidden-layer and 1000 units was the most promising (better-validated metrics) and efficient (less time for training and predicting).\\
 
 Subsequently, ReLu's activation function is run for two and three hidden-layers 2:
 
 \begin{table}[H]
 \centering
-%\resizebox{\textwidth}{110}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -483,26 +403,23 @@ ReLu & 2 & 800 & 0.99 &	4.30 &	0.67 &	1.65\\
 ReLu & 2 & 1000 & 0.77 &	3.05 &	0.59 &	1.40\\
 \rowcolor{lightgray} \textbf{ReLu} & \textbf{2} & \textbf{1200} & \textbf{0.66} &	\textbf{2.26} &	\textbf{0.54} &	\textbf{1.21}\\
 \hline
-\hline
-
-\hline
-\end{tabular}%}
+\end{tabular}
 \label{table:Results for LSTM, ReLu, High}
 \caption{Parameters' combinations for predicting the next day's highest price.}
 \end{table}
 
-\hyperref[table:Results for LSTM, ReLu, High]{Table 12} displays that the Testing MSE and MAE obtain their best-validated accuracy values of 2.26 and 1.21 for one hidden-layer and 1200 units. Again, it seem not to have converged to its minimum validated score, and a higher number of units and epochs would be suitable for futures tests.
+\hyperref[table:Results for LSTM, ReLu, High]{\textit{Table 12}} displays that the Testing MSE and MAE obtain their best-validated accuracy values of 2.26 and 1.21 for one hidden-layer and 1200 units. Again, it seem not to have converged to its minimum validated score, and a higher number of units and epochs would be suitable for futures tests.
 
 \subsubsection{Predicting the lowest price of the next day using LSTM}
 \label{chap:Predicting the lowest price of the next day using LSTM}
 
-\quad The input data presented in \hyperref[table:TrainingFeatures]{Table 1} is performed on the LSTM model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for LSTM]{Table 9}. The aim is to optimize the LSTM model for predicting the lowest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training LSTM model and optimizing hyper-parameters]{\textit{Training LSTM model and optimizing hyper-parameters}} section.\\
+\quad The input data presented in \hyperref[table:TrainingFeatures]{\textit{Table 1}} is performed on the LSTM model with various combinations of parameters as delineated in \hyperref[table:Hyper-parameters for LSTM]{\textit{Table 9}}. The aim is to optimize the LSTM model for predicting the lowest price of the next day with the most promising and effective parameters as explained in \hyperref[chap:Training LSTM model and optimizing hyper-parameters]{\textit{Training LSTM model and optimizing hyper-parameters}} section.\\
 
 The results for Hard-Sigmoid's activation function with one and two hidden-layers follow:
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -533,11 +450,11 @@ Hard-Sigmoid & 2 & 1200 & 0.35 &	0.45 &	0.39 &	0.52\\
 \caption{Parameters' combinations for predicting the next day's lowest price.}
 \end{table}
 
-\hyperref[table:Results for LSTM, Sigmoid, Low]{Table 13} lists that the Testing MSE and MAE achieve their best-validated precision of 1.84 and 1.12 for one hidden-layer and 1200 units, and 0.45 and 0.51 for two hidden-layers and 800 units. Both best scenarios appear not to have converged to their minimum validated score, and a higher number of units and epochs would be relevant for futures tests.\\
+\hyperref[table:Results for LSTM, Sigmoid, Low]{\textit{Table 13}} lists that the Testing MSE and MAE achieve their best-validated precision of 1.84 and 1.12 for one hidden-layer and 1200 units, and 0.45 and 0.51 for two hidden-layers and 800 units. Both best scenarios appear not to have converged to their minimum validated score, and a higher number of units and epochs would be relevant for futures tests.\\
 
 \begin{table}[H]
 \centering
-\resizebox{\textwidth}{110}{
+\resizebox{\textwidth}{3.25cm}{
 \begin{tabular}{ |c|c|c|c|c|c|c| }
 \hline
 \textbf{Act. Funct.} & \textbf{H-layers} & \textbf{Units} & \textbf{Train MSE} & \textbf{Test MSE} & \textbf{Train MAE} & \textbf{Test MAE}\\
@@ -568,7 +485,7 @@ Tanh & 2 & 1200 & 0.42 &	0.57 &	0.42 &	0.58\\
 \caption{Parameters' combinations for predicting the next day's lowest price.}
 \end{table}
 
-\hyperref[table:Results for LSTM, Tanh, Low]{Table 14} shows that the Testing MSE and MAE achieve their best-validated precision of 0.45 and 0.50 for one hidden-layer and 800 units, and 0.56 and 0.58 for two hidden-layers and 600 units. However, these accuracies are not better than the ones achieved from RNN training and validation with same parameters and activation function.\\
+\hyperref[table:Results for LSTM, Tanh, Low]{\textit{Table 14}} shows that the Testing MSE and MAE achieve their best-validated precision of 0.45 and 0.50 for one hidden-layer and 800 units, and 0.56 and 0.58 for two hidden-layers and 600 units. However, these accuracies are not better than the ones achieved from RNN training and validation with same parameters and activation function.\\
 
 \subsection{Our optimal model}
 \label{chap:Our optimal model}
@@ -613,7 +530,7 @@ The activation function in which the best testing MSE and MAE scores converged t
 \caption{Summary of parameters for our best model.}
 \end{table}\\
 
-It would be interesting to visualize the \textit{Train x Test} plots in order to analyse the bias and variance of the learning process:\\
+It would be interesting to visualize the Train x Test plots in order to analyse the bias and variance of the learning process:\\
 
 \begin{figure}[H]
 \label{fig:RNN train vs test for highest}
@@ -679,7 +596,7 @@ Remark that the metrics are precisely the same for 10, 30, 50, or 80 epochs, con
 
 As stated before, we are interested in finding an application for the RNN's outputs translating into algorithm day-trading decision-making process. For that, we will follow the stock market in real-time, taking into account fixed intervals of 15 minutes, that is, every 15 minutes, the system consults our trade rules and recommends entering or exiting from the market.\\
 
-As bench-mark, we will apply a typical trading system using Bollinger Bands. This traditional trading system consists of entering or exiting the market when the day-session prices' oscillation reaches the five-day SMA Bollinger Upper or Lower-Band. It is vital to remark that more than one trade is expected but only allowed if they are alternated, that is, the system can not buy or sell twice in a row. Besides, since this is a day-trading system, all opened trades will be closed by the end of the last 15 minutes of the market session. In summary, the rules of the Bollinger Bands trading system are:
+As bench-mark, we will apply a typical trading system using Bollinger Bands. This traditional trading system consists of entering or exiting the market when the day-session prices' oscillation reaches the five-day SMA Bollinger Upper or Lower-Band. It is vital to remark that more than one trading order in a day is expected but only allowed if they are alternated, that is, the system can not buy or sell twice in a row. Besides, since this is a day-trading system, all opened trades will be closed by the end of the last 15 minutes of the market session. In summary, the rules of the Bollinger Bands trading system are:
 
 \begin{itemize}
     \item Buy when the 15 min session's highest price is larger than the 5day-SMA-Upper-Band;
@@ -688,7 +605,7 @@ As bench-mark, we will apply a typical trading system using Bollinger Bands. Thi
     \item It is allowed only one trade per time in each direction.
 \end{itemize}
 
-The python script named \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/application.py}{application.py}, in our GitHub directory \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/}{Project3/}, performs the back-testing of this strategy from 14.10.2020 until 03.12.2020, and the results follow:
+The python script named \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/application.py}{\textit{application.py}}, in our GitHub directory \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/}{\textit{Project3/}}, performs the back-testing of this strategy from 14.10.2020 until 03.12.2020, and the results follow:
 
 \begin{table}[H]
 \centering
@@ -704,13 +621,13 @@ The python script named \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/
 \hline
 \textbf{Cumulative daily return:} & BRL1,95 per share\\
 \hline
-\textbf{Cumulative daily percentage:} & approx. 7 percent of a share\\
+\textbf{Cumulative daily percentage:} & approx. 7.5 percent of a share\\
 \hline
 \end{tabular}
 \caption{Results for 5-day Bollinger Bands trading strategy.}
 \end{table}
 
-Now, it is time to introduce or trading strategy. From our best RNN model, we have predicted the next day's highest and lowest prices. Therefore, we use these predicted highest and lowest during the day-trading session for algorithm trading decision-making, likely the 5-day-SMA Upper and Lower Bollinger bands. In summary, the rules of our trading system are:
+Now, it is time to introduce or trading strategy. From our best RNN model, we have predicted the next day's highest and lowest prices. Therefore, we use these predicted highest and lowest during the current day-trading session for algorithm trading decision-making, likely the 5-day-SMA Upper and Lower Bollinger bands. In summary, the rules of our trading system are:
 
 \begin{itemize}
     \item Buy when the 15 min session's highest price is larger than the predicted highest for the day;
@@ -719,7 +636,7 @@ Now, it is time to introduce or trading strategy. From our best RNN model, we ha
     \item It is allowed only one trade per time in each direction.
 \end{itemize}
 
-The python script named \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/application.py}{application.py}, in our GitHub directory \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/}{Project3/}, performs the back-testing of this strategy from 14.10.2020 until 03.12.2020, and the results follow:
+The python script named \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/application.py}{\textit{application.py}}, in our GitHub directory \href{https://github.com/fabiorodp/UiO-FYS-STK4155/tree/master/Project3/}{\textit{Project3/}}, performs the back-testing of this strategy from 14.10.2020 until 03.12.2020, and the results follow:
 
 \begin{table}[H]
 \centering
