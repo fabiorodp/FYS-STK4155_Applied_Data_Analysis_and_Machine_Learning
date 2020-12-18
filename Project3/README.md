@@ -9,7 +9,7 @@
 • report/ - Directory containing the written report in latex and pdf.
 
 
-• handling day.py - Test script for handling the raw data to samples and features organized ob ject.
+• handling_day.py - Test script for handling the raw data to samples and features organized ob ject.
 
 
 • RNN.py - Test script for training the various SimpleRNN model with CV and parameters’ combination.
